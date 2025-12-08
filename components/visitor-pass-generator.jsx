@@ -2,6 +2,94 @@
 
 import { useState, useEffect, useRef } from 'react'
 
+// Hardcoded database simulation
+const HARDCODED_DATA = {
+  passHistory: [],
+  blacklist: [
+    { name: 'Robert Suspicious', phone: '9870012345', reason: 'Security Violation' },
+    { name: 'Jane Unauthorized', phone: '9870012346', reason: 'Previous Misconduct' }
+  ],
+  entryExitLogs: []
+}
+
+// Mock API functions
+const mockAPI = {
+  // Get pass history
+  async getPassHistory() {
+    try {
+      // Try to fetch from placeholder API
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=5');
+      const data = await response.json();
+      
+      // Transform to our format
+      return data.map((post, index) => ({
+        id: post.id,
+        visitorName: `Visitor ${post.id}`,
+        phone: `98765${post.id.toString().padStart(5, '0')}`,
+        purpose: ['Personal', 'Delivery', 'Service'][index % 3],
+        residentName: 'John Doe',
+        unitNumber: `A-${101 + index}`,
+        passCode: `PASS${post.id.toString().padStart(3, '0')}`,
+        pin: Math.floor(1000 + Math.random() * 9000).toString(),
+        timestamp: new Date(Date.now() - (index * 86400000)).toISOString(),
+        status: ['pending', 'active', 'completed'][index % 3]
+      }));
+    } catch (error) {
+      console.log('Using hardcoded pass history');
+      return HARDCODED_DATA.passHistory;
+    }
+  },
+
+  // Get blacklist
+  async getBlacklist() {
+    return HARDCODED_DATA.blacklist;
+  },
+
+  // Get entry/exit logs
+  async getEntryExitLogs() {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/comments?_limit=3');
+      const data = await response.json();
+      
+      return data.map((comment, index) => ({
+        id: comment.id,
+        visitor: `Visitor ${comment.id}`,
+        type: index % 2 === 0 ? 'entry' : 'exit',
+        passCode: `PASS${comment.id.toString().padStart(3, '0')}`,
+        timestamp: new Date(Date.now() - (index * 3600000)).toISOString(),
+        verifiedBy: index % 2 === 0 ? 'System' : 'Security'
+      }));
+    } catch (error) {
+      console.log('Using hardcoded entry/exit logs');
+      return HARDCODED_DATA.entryExitLogs;
+    }
+  },
+
+  // Save pass to history
+  async savePassToHistory(passData) {
+    HARDCODED_DATA.passHistory.unshift(passData);
+    return { success: true, id: passData.id };
+  },
+
+  // Add to blacklist
+  async addToBlacklist(visitor) {
+    HARDCODED_DATA.blacklist.push(visitor);
+    return { success: true };
+  },
+
+  // Remove from blacklist
+  async removeFromBlacklist(index) {
+    HARDCODED_DATA.blacklist.splice(index, 1);
+    return { success: true };
+  },
+
+  // Log entry/exit
+  async logEntryExit(log) {
+    HARDCODED_DATA.entryExitLogs.unshift(log);
+    return { success: true, id: log.id };
+  }
+};
+
 export function VisitorPassGenerator() {
   // Form state
   const [formData, setFormData] = useState({
@@ -20,20 +108,40 @@ export function VisitorPassGenerator() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [qrCodeData, setQrCodeData] = useState('')
   const [passHistory, setPassHistory] = useState([])
-  const [blacklistedVisitors, setBlacklistedVisitors] = useState([
-    { name: 'Robert Suspicious', phone: '9870012345', reason: 'Security Violation' },
-    { name: 'Jane Unauthorized', phone: '9870012346', reason: 'Previous Misconduct' }
-  ])
+  const [blacklistedVisitors, setBlacklistedVisitors] = useState([])
+  const [entryExitLogs, setEntryExitLogs] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Timer state for pass expiry
   const [timeLeft, setTimeLeft] = useState(null)
   const timerRef = useRef(null)
 
-  // Initialize default times
+  // Initialize component
   useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        const [history, blacklist, logs] = await Promise.all([
+          mockAPI.getPassHistory(),
+          mockAPI.getBlacklist(),
+          mockAPI.getEntryExitLogs()
+        ])
+        
+        setPassHistory(history)
+        setBlacklistedVisitors(blacklist)
+        setEntryExitLogs(logs)
+      } catch (error) {
+        console.error('Error loading data:', error)
+        setBlacklistedVisitors(HARDCODED_DATA.blacklist)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    // Set default times
     const now = new Date()
-    const arrival = new Date(now.getTime() + 30 * 60000) // 30 minutes from now
-    const departure = new Date(arrival.getTime() + 2 * 60 * 60000) // 2 hours later
+    const arrival = new Date(now.getTime() + 30 * 60000)
+    const departure = new Date(arrival.getTime() + 2 * 60 * 60000)
 
     setFormData(prev => ({
       ...prev,
@@ -41,17 +149,7 @@ export function VisitorPassGenerator() {
       expectedDeparture: departure.toISOString().slice(0, 16)
     }))
 
-    // Load history from localStorage
-    const savedHistory = localStorage.getItem('visitorPassHistory')
-    if (savedHistory) {
-      setPassHistory(JSON.parse(savedHistory))
-    }
-
-    // Load blacklist from localStorage
-    const savedBlacklist = localStorage.getItem('visitorBlacklist')
-    if (savedBlacklist) {
-      setBlacklistedVisitors(JSON.parse(savedBlacklist))
-    }
+    loadData()
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
@@ -66,7 +164,7 @@ export function VisitorPassGenerator() {
       [name]: value
     }))
 
-    // Check if visitor is blacklisted on name/phone change
+    // Check if visitor is blacklisted
     if ((name === 'visitorName' || name === 'phone') && value) {
       checkBlacklist(value, name === 'visitorName' ? 'name' : 'phone')
     }
@@ -97,12 +195,11 @@ export function VisitorPassGenerator() {
       generated: passData.timestamp
     })
 
-    // Using a simple QR code generation API (free tier)
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`
   }
 
   // Generate visitor pass
-  const generatePass = () => {
+  const generatePass = async () => {
     if (!formData.visitorName || !formData.phone) {
       alert('Please fill in visitor name and phone number')
       return
@@ -110,95 +207,120 @@ export function VisitorPassGenerator() {
 
     setIsGenerating(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      const passCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-      const pin = Math.floor(1000 + Math.random() * 9000).toString()
-      const timestamp = new Date().toISOString()
-      const id = Date.now().toString()
+    // Simulate API call delay
+    setTimeout(async () => {
+      try {
+        const passCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+        const pin = Math.floor(1000 + Math.random() * 9000).toString()
+        const timestamp = new Date().toISOString()
+        const id = Date.now().toString()
 
-      const passData = {
-        id,
-        ...formData,
-        passCode,
-        pin,
-        timestamp,
-        status: 'pending',
-        securityVerified: false
-      }
+        const passData = {
+          id,
+          ...formData,
+          passCode,
+          pin,
+          timestamp,
+          status: 'pending',
+          securityVerified: false
+        }
 
-      const qrCodeUrl = generateQRCode(passData)
-      
-      setGeneratedPass(passData)
-      setQrCodeData(qrCodeUrl)
-      setIsGenerating(false)
-
-      // Add to history
-      const newHistory = [passData, ...passHistory.slice(0, 9)] // Keep last 10
-      setPassHistory(newHistory)
-      localStorage.setItem('visitorPassHistory', JSON.stringify(newHistory))
-
-      // Log entry
-      logEntryExit('entry', passData)
-
-      // Start expiry timer (2 hours default)
-      const expiryTime = new Date(formData.expectedDeparture).getTime() - Date.now()
-      if (expiryTime > 0) {
-        setTimeLeft(Math.floor(expiryTime / 1000))
+        const qrCodeUrl = generateQRCode(passData)
         
-        timerRef.current = setInterval(() => {
-          setTimeLeft(prev => {
-            if (prev <= 1) {
-              clearInterval(timerRef.current)
-              alert(`Pass for ${formData.visitorName} has expired!`)
-              return null
-            }
-            return prev - 1
-          })
-        }, 1000)
-      }
+        setGeneratedPass(passData)
+        setQrCodeData(qrCodeUrl)
 
-      alert(`✅ Visitor pass generated!\nPass Code: ${passCode}\nPIN: ${pin}`)
+        // Save to history via API
+        await mockAPI.savePassToHistory(passData)
+
+        // Update local state
+        const newHistory = [passData, ...passHistory.slice(0, 9)]
+        setPassHistory(newHistory)
+
+        // Log entry
+        const logEntry = {
+          id: Date.now(),
+          type: 'entry',
+          visitor: passData.visitorName,
+          passCode: passData.passCode,
+          timestamp: new Date().toISOString(),
+          verifiedBy: 'System'
+        }
+        await mockAPI.logEntryExit(logEntry)
+
+        // Update logs state
+        setEntryExitLogs(prev => [logEntry, ...prev.slice(0, 9)])
+
+        // Start expiry timer
+        const expiryTime = new Date(formData.expectedDeparture).getTime() - Date.now()
+        if (expiryTime > 0) {
+          setTimeLeft(Math.floor(expiryTime / 1000))
+          
+          timerRef.current = setInterval(() => {
+            setTimeLeft(prev => {
+              if (prev <= 1) {
+                clearInterval(timerRef.current)
+                alert(`Pass for ${formData.visitorName} has expired!`)
+                return null
+              }
+              return prev - 1
+            })
+          }, 1000)
+        }
+
+        alert(`✅ Visitor pass generated!\nPass Code: ${passCode}\nPIN: ${pin}`)
+      } catch (error) {
+        console.error('Error generating pass:', error)
+        alert('Failed to generate pass. Please try again.')
+      } finally {
+        setIsGenerating(false)
+      }
     }, 1500)
   }
 
-  // Log entry/exit
-  const logEntryExit = (type, passData) => {
-    const log = {
-      id: Date.now(),
-      type,
-      visitor: passData.visitorName,
-      passCode: passData.passCode,
-      timestamp: new Date().toISOString(),
-      verifiedBy: type === 'entry' ? 'System' : 'Security'
-    }
-
-    const logs = JSON.parse(localStorage.getItem('entryExitLogs') || '[]')
-    logs.unshift(log)
-    localStorage.setItem('entryExitLogs', JSON.stringify(logs))
-  }
-
   // Verify visitor entry
-  const verifyEntry = () => {
+  const verifyEntry = async () => {
     if (!generatedPass) return
 
     const enteredPin = prompt('Security: Enter visitor PIN for verification:')
     if (enteredPin === generatedPass.pin) {
       setGeneratedPass(prev => ({ ...prev, securityVerified: true, status: 'active' }))
       alert('✅ Visitor verified and allowed entry!')
-      logEntryExit('entry', generatedPass)
+      
+      // Log entry
+      const logEntry = {
+        id: Date.now(),
+        type: 'entry',
+        visitor: generatedPass.visitorName,
+        passCode: generatedPass.passCode,
+        timestamp: new Date().toISOString(),
+        verifiedBy: 'Security'
+      }
+      await mockAPI.logEntryExit(logEntry)
+      setEntryExitLogs(prev => [logEntry, ...prev.slice(0, 9)])
     } else {
       alert('❌ Invalid PIN. Access denied.')
     }
   }
 
   // Mark visitor exit
-  const markExit = () => {
+  const markExit = async () => {
     if (!generatedPass) return
     
     setGeneratedPass(prev => ({ ...prev, status: 'completed' }))
     alert(`Visitor ${generatedPass.visitorName} has checked out.`)
-    logEntryExit('exit', generatedPass)
+    
+    // Log exit
+    const logExit = {
+      id: Date.now(),
+      type: 'exit',
+      visitor: generatedPass.visitorName,
+      passCode: generatedPass.passCode,
+      timestamp: new Date().toISOString(),
+      verifiedBy: 'Security'
+    }
+    await mockAPI.logEntryExit(logExit)
+    setEntryExitLogs(prev => [logExit, ...prev.slice(0, 9)])
     
     if (timerRef.current) {
       clearInterval(timerRef.current)
@@ -207,7 +329,7 @@ export function VisitorPassGenerator() {
   }
 
   // Add to blacklist
-  const addToBlacklist = () => {
+  const addToBlacklist = async () => {
     if (!formData.visitorName) {
       alert('Please enter visitor name first')
       return
@@ -215,28 +337,23 @@ export function VisitorPassGenerator() {
 
     const reason = prompt('Enter reason for blacklisting:')
     if (reason) {
-      const newBlacklist = [
-        ...blacklistedVisitors,
-        {
-          name: formData.visitorName,
-          phone: formData.phone,
-          reason,
-          added: new Date().toISOString()
-        }
-      ]
+      const visitor = {
+        name: formData.visitorName,
+        phone: formData.phone,
+        reason,
+        added: new Date().toISOString()
+      }
       
-      setBlacklistedVisitors(newBlacklist)
-      localStorage.setItem('visitorBlacklist', JSON.stringify(newBlacklist))
+      await mockAPI.addToBlacklist(visitor)
+      setBlacklistedVisitors(prev => [...prev, visitor])
       alert('✅ Visitor added to blacklist')
     }
   }
 
   // Remove from blacklist
-  const removeFromBlacklist = (index) => {
-    const newBlacklist = [...blacklistedVisitors]
-    newBlacklist.splice(index, 1)
-    setBlacklistedVisitors(newBlacklist)
-    localStorage.setItem('visitorBlacklist', JSON.stringify(newBlacklist))
+  const removeFromBlacklist = async (index) => {
+    await mockAPI.removeFromBlacklist(index)
+    setBlacklistedVisitors(prev => prev.filter((_, i) => i !== index))
   }
 
   // Share pass
@@ -284,6 +401,23 @@ Valid until: ${new Date(generatedPass.expectedDeparture).toLocaleString()}`
       unitNumber: pass.unitNumber
     })
     alert(`Loaded ${pass.visitorName}'s details from history`)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+          <div className="p-6">
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+                <p className="mt-4 text-gray-700">Loading Visitor Pass Generator...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -611,30 +745,31 @@ Valid until: ${new Date(generatedPass.expectedDeparture).toLocaleString()}`
           <div className="mt-8 bg-white border border-gray-300 rounded-xl p-6">
             <h4 className="font-bold text-gray-900 mb-3">Recent Entry/Exit Logs</h4>
             <div className="space-y-3">
-              {(() => {
-                const logs = JSON.parse(localStorage.getItem('entryExitLogs') || '[]')
-                return logs.slice(0, 3).map((log, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border-b border-gray-200">
-                    <div>
-                      <span className="font-medium text-gray-900">{log.visitor}</span>
-                      <span className={`ml-2 text-xs px-3 py-1.5 rounded-full font-medium ${
-                        log.type === 'entry' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {log.type.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-700 font-medium">
-                      {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+              {entryExitLogs.slice(0, 3).map((log, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border-b border-gray-200">
+                  <div>
+                    <span className="font-medium text-gray-900">{log.visitor}</span>
+                    <span className={`ml-2 text-xs px-3 py-1.5 rounded-full font-medium ${
+                      log.type === 'entry' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {log.type.toUpperCase()}
+                    </span>
                   </div>
-                ))
-              })()}
+                  <div className="text-sm text-gray-700 font-medium">
+                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              ))}
+              {entryExitLogs.length === 0 && (
+                <div className="text-center py-4">
+                  <p className="text-gray-700">No entry/exit logs yet</p>
+                </div>
+              )}
             </div>
             <button
               onClick={() => {
-                const logs = JSON.parse(localStorage.getItem('entryExitLogs') || '[]')
-                if (logs.length > 0) {
-                  alert(`Total logs: ${logs.length}\nLast entry: ${logs[0]?.visitor} at ${new Date(logs[0]?.timestamp).toLocaleString()}`)
+                if (entryExitLogs.length > 0) {
+                  alert(`Total logs: ${entryExitLogs.length}\nLast entry: ${entryExitLogs[0]?.visitor} at ${new Date(entryExitLogs[0]?.timestamp).toLocaleString()}`)
                 } else {
                   alert('No logs available')
                 }

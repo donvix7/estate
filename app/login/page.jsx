@@ -3,6 +3,91 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Hardcoded user database simulation
+const USER_DATABASE = {
+  users: [
+    {
+      id: 1,
+      email: 'resident@demo.com',
+      password: '123456',
+      name: 'John Resident',
+      type: 'resident',
+      unitNumber: 'A-101',
+      building: 'Tower A',
+      phone: '+91 9876543210'
+    },
+    {
+      id: 2,
+      email: 'admin@demo.com',
+      password: '123456',
+      name: 'Admin User',
+      type: 'admin',
+      role: 'Super Admin',
+      accessLevel: 'full',
+      phone: '+91 9876543211'
+    },
+    {
+      id: 3,
+      email: 'security@demo.com',
+      password: '123456',
+      name: 'Security Officer',
+      type: 'security',
+      gateStation: 'Gate 1',
+      shift: 'Day Shift',
+      badgeNumber: 'SEC-001'
+    }
+  ],
+  sessions: []
+}
+
+// Mock API functions
+const mockAPI = {
+  // Authenticate user
+  async authenticateUser(email, password, userType) {
+    await new Promise(resolve => setTimeout(resolve, 800)) // Simulate API delay
+    
+    const user = USER_DATABASE.users.find(u => 
+      u.email === email && u.password === password && u.type === userType
+    )
+    
+    if (!user) {
+      throw new Error('Invalid credentials')
+    }
+    
+    // Create session
+    const session = {
+      userId: user.id,
+      userType: user.type,
+      userName: user.name,
+      userEmail: user.email,
+      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+    }
+    
+    USER_DATABASE.sessions.push(session)
+    
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        type: user.type,
+        ...(user.type === 'resident' && { unitNumber: user.unitNumber, building: user.building }),
+        ...(user.type === 'admin' && { role: user.role, accessLevel: user.accessLevel }),
+        ...(user.type === 'security' && { gateStation: user.gateStation, badgeNumber: user.badgeNumber })
+      },
+      session: session.sessionId
+    }
+  },
+  
+  // Get current session (simulated)
+  getCurrentSession() {
+    return USER_DATABASE.sessions[USER_DATABASE.sessions.length - 1] || null
+  }
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -16,42 +101,47 @@ export default function LoginPage() {
     setError('')
     setIsLoading(true)
 
-    // Demo credentials
-    const demoCredentials = {
-      resident: { email: 'resident@demo.com', password: '123456', name: 'John Resident' },
-      admin: { email: 'admin@demo.com', password: '123456', name: 'Admin User' },
-      security: { email: 'security@demo.com', password: '123456', name: 'Security Officer' }
-    }
-
-    const valid = demoCredentials[userType]
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    if (email === valid.email && password === valid.password) {
-      // Store user data in localStorage for demo
-      localStorage.setItem('userType', userType)
-      localStorage.setItem('userName', valid.name)
-      localStorage.setItem('userEmail', email)
+    try {
+      const result = await mockAPI.authenticateUser(email, password, userType)
       
-      switch(userType) {
-        case 'resident':
-          router.push('/dashboard/resident')
-          break
-        case 'admin':
-          router.push('/dashboard/admin')
-          break
-        case 'security':
-          router.push('/dashboard/security')
-          break
-        default:
-          router.push('/dashboard/resident')
+      if (result.success) {
+        // Store minimal data in sessionStorage for current session only
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('currentUser', JSON.stringify(result.user))
+          sessionStorage.setItem('sessionId', result.session)
+        }
+        
+        switch(userType) {
+          case 'resident':
+            router.push('/dashboard/resident')
+            break
+          case 'admin':
+            router.push('/dashboard/admin')
+            break
+          case 'security':
+            router.push('/dashboard/security')
+            break
+          default:
+            router.push('/dashboard/resident')
+        }
       }
-    } else {
+    } catch (err) {
       setError('Invalid credentials. Use demo credentials: email@demo.com / 123456')
       setIsLoading(false)
     }
   }
+
+  // Demo credentials for the selected user type
+  const getDemoCredentials = () => {
+    const user = USER_DATABASE.users.find(u => u.type === userType)
+    return {
+      email: user?.email || `${userType}@demo.com`,
+      password: '123456',
+      name: user?.name || `${userType.charAt(0).toUpperCase() + userType.slice(1)} User`
+    }
+  }
+
+  const demoCredentials = getDemoCredentials()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
@@ -74,7 +164,11 @@ export default function LoginPage() {
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setUserType(type)}
+                    onClick={() => {
+                      setUserType(type)
+                      const creds = USER_DATABASE.users.find(u => u.type === type)
+                      setEmail(creds?.email || '')
+                    }}
                     className={`py-3 rounded-lg capitalize font-medium transition-all ${
                       userType === type 
                         ? 'bg-blue-700 text-white shadow-md' 
@@ -105,7 +199,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                placeholder={`${userType}@demo.com`}
+                placeholder={demoCredentials.email}
                 required
               />
             </div>
@@ -143,9 +237,20 @@ export default function LoginPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-gray-800 mb-1">Demo Credentials for {userType}:</p>
                 <div className="font-mono text-sm bg-white p-2 rounded border">
-                  <div className="text-gray-900">Email: {userType}@demo.com</div>
-                  <div className="text-gray-900">Password: 123456</div>
+                  <div className="text-gray-900">Email: {demoCredentials.email}</div>
+                  <div className="text-gray-900">Password: {demoCredentials.password}</div>
+                  <div className="text-gray-900 mt-1 text-xs">Name: {demoCredentials.name}</div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(demoCredentials.email)
+                    setPassword('123456')
+                  }}
+                  className="mt-3 text-sm text-blue-700 hover:text-blue-900 font-medium"
+                >
+                  Click to auto-fill credentials
+                </button>
               </div>
             </div>
           </form>
@@ -194,7 +299,10 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              This is a demo application. All data is stored locally.
+              This is a demo application. All data is stored in-memory and resets on page refresh.
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Active users in database: {USER_DATABASE.users.length}
             </p>
           </div>
         </div>

@@ -1,51 +1,250 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PanicButton } from '@/components/panic-button'
 import { VisitorPassGenerator } from '@/components/visitor-pass-generator'
 import { PaymentSystem } from '@/components/payment-system'
 
-export default function ResidentDashboard() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState('overview')
-  const [announcements, setAnnouncements] = useState([
+// Hardcoded database simulation
+const HARDCODED_DATA = {
+  announcements: [
     { id: 1, title: 'Water Supply Maintenance', content: 'Water supply will be interrupted on Jan 20, 10 AM - 4 PM', date: '2024-01-18', type: 'maintenance', read: false },
     { id: 2, title: 'Security Update', content: 'New security protocols effective from Feb 1', date: '2024-01-17', type: 'security', read: true },
     { id: 3, title: 'Community Event', content: 'Annual community dinner on Jan 25 at Club House', date: '2024-01-16', type: 'event', read: true }
-  ])
-
-  const visitors = [
+  ],
+  visitors: [
     { id: 1, name: 'John Delivery', purpose: 'Delivery', time: 'Today, 10:30 AM', status: 'Active' },
-    { id: 2, name: 'Electrician', purpose: 'Service', time: 'Today, 2:00 PM', status: 'Pending' }
+    { id: 2, name: 'Electrician', purpose: 'Service', time: 'Today, 2:00 PM', status: 'Pending' },
+    { id: 3, name: 'Sarah Guest', purpose: 'Personal', time: 'Yesterday, 7:00 PM', status: 'Completed' },
+    { id: 4, name: 'Amazon Delivery', purpose: 'Delivery', time: 'Jan 15, 11:30 AM', status: 'Completed' }
+  ],
+  residents: [
+    {
+      id: 1,
+      name: 'John Resident',
+      email: 'resident@demo.com',
+      unitNumber: 'A-101',
+      building: 'Tower A',
+      phone: '+91 9876543210',
+      joinDate: '2023-01-15'
+    }
   ]
+}
+
+// Mock API functions
+const mockAPI = {
+  // Get announcements
+  async getAnnouncements() {
+    try {
+      // Try to fetch from placeholder API
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=3');
+      const data = await response.json();
+      
+      return data.map((post, index) => ({
+        id: post.id,
+        title: post.title.substring(0, 30) + '...',
+        content: post.body.substring(0, 100) + '...',
+        date: `2024-01-${18 - index}`,
+        type: ['maintenance', 'security', 'event'][index],
+        read: index > 0
+      }));
+    } catch (error) {
+      console.log('Using hardcoded announcements data');
+      return HARDCODED_DATA.announcements;
+    }
+  },
+
+  // Get resident data
+  async getResidentData(userId = 1) {
+    const resident = HARDCODED_DATA.residents.find(r => r.id === userId);
+    if (!resident) {
+      return HARDCODED_DATA.residents[0];
+    }
+    return resident;
+  },
+
+  // Get visitors
+  async getVisitors() {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/users?_limit=4');
+      const data = await response.json();
+      
+      return data.map((user, index) => ({
+        id: user.id,
+        name: user.name,
+        purpose: ['Delivery', 'Service', 'Personal', 'Delivery'][index],
+        time: ['Today, 10:30 AM', 'Today, 2:00 PM', 'Yesterday, 7:00 PM', 'Jan 15, 11:30 AM'][index],
+        status: ['Active', 'Pending', 'Completed', 'Completed'][index]
+      }));
+    } catch (error) {
+      console.log('Using hardcoded visitors data');
+      return HARDCODED_DATA.visitors;
+    }
+  },
+
+  // Mark announcement as read
+  async markAnnouncementAsRead(announcementId) {
+    const announcementIndex = HARDCODED_DATA.announcements.findIndex(a => a.id === announcementId);
+    if (announcementIndex !== -1) {
+      HARDCODED_DATA.announcements[announcementIndex].read = true;
+    }
+    return { success: true };
+  },
+
+  // Mark all announcements as read
+  async markAllAnnouncementsAsRead() {
+    HARDCODED_DATA.announcements.forEach(ann => ann.read = true);
+    return { success: true };
+  }
+};
+
+export default function ResidentDashboard() {
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState('overview')
+  const [announcements, setAnnouncements] = useState([])
+  const [visitors, setVisitors] = useState([])
+  const [residentData, setResidentData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [announcementsData, visitorsData, residentData] = await Promise.all([
+          mockAPI.getAnnouncements(),
+          mockAPI.getVisitors(),
+          mockAPI.getResidentData()
+        ]);
+        
+        setAnnouncements(announcementsData);
+        setVisitors(visitorsData);
+        setResidentData(residentData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Fallback to hardcoded data
+        setAnnouncements(HARDCODED_DATA.announcements);
+        setVisitors(HARDCODED_DATA.visitors);
+        setResidentData(HARDCODED_DATA.residents[0]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [])
 
   const getUserName = () => {
-    return localStorage.getItem('userName') || 'John'
+    if (residentData) {
+      return residentData.name;
+    }
+    
+    // Fallback to session storage
+    if (typeof window !== 'undefined') {
+      const userData = sessionStorage.getItem('currentUser');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.name || 'Resident';
+      }
+    }
+    return 'Resident';
   }
 
   const getUnitNumber = () => {
-    return localStorage.getItem('userUnit') || 'A-101'
+    if (residentData) {
+      return residentData.unitNumber;
+    }
+    
+    // Fallback to session storage
+    if (typeof window !== 'undefined') {
+      const userData = sessionStorage.getItem('currentUser');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.unitNumber || 'A-101';
+      }
+    }
+    return 'A-101';
   }
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userName')
-      localStorage.removeItem('userEmail')
-      router.push('/login')
+      // Clear session storage
+      sessionStorage.removeItem('currentUser');
+      sessionStorage.removeItem('sessionId');
+      router.push('/login');
     }
   }
 
-  const markAsRead = (id) => {
-    setAnnouncements(announcements.map(ann => 
-      ann.id === id ? { ...ann, read: true } : ann
-    ))
+  const markAsRead = async (id) => {
+    try {
+      await mockAPI.markAnnouncementAsRead(id);
+      
+      // Update local state
+      setAnnouncements(prev => 
+        prev.map(ann => 
+          ann.id === id ? { ...ann, read: true } : ann
+        )
+      );
+    } catch (error) {
+      console.error('Error marking announcement as read:', error);
+      // Still update local state for better UX
+      setAnnouncements(prev => 
+        prev.map(ann => 
+          ann.id === id ? { ...ann, read: true } : ann
+        )
+      );
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      await mockAPI.markAllAnnouncementsAsRead();
+      
+      // Update local state
+      setAnnouncements(prev => 
+        prev.map(ann => ({ ...ann, read: true }))
+      );
+    } catch (error) {
+      console.error('Error marking all announcements as read:', error);
+      // Still update local state for better UX
+      setAnnouncements(prev => 
+        prev.map(ann => ({ ...ann, read: true }))
+      );
+    }
   }
 
   const getUnreadCount = () => {
-    return announcements.filter(ann => !ann.read).length
+    return announcements.filter(ann => !ann.read).length;
   }
+
+  const getActiveVisitors = () => {
+    return visitors.filter(v => v.status === 'Active').length;
+  }
+
+  const getVisitorStatistics = () => {
+    const activeVisitors = visitors.filter(v => v.status === 'Active').length;
+    const pendingVisitors = visitors.filter(v => v.status === 'Pending').length;
+    
+    return {
+      thisMonth: visitors.length,
+      active: activeVisitors,
+      pending: pendingVisitors
+    };
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Loading Resident Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const visitorStats = getVisitorStatistics();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -116,7 +315,7 @@ export default function ResidentDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-gray-800 mb-2">Active Visitors</h3>
-                    <p className="text-3xl font-bold text-blue-700">{visitors.filter(v => v.status === 'Active').length}</p>
+                    <p className="text-3xl font-bold text-blue-700">{getActiveVisitors()}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <span className="text-blue-600 text-xl">👥</span>
@@ -163,7 +362,7 @@ export default function ResidentDashboard() {
                 </button>
               </div>
               <div className="space-y-4">
-                {visitors.map(visitor => (
+                {visitors.slice(0, 2).map(visitor => (
                   <div key={visitor.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
                     <div>
                       <p className="font-bold text-gray-900">{visitor.name}</p>
@@ -192,17 +391,11 @@ export default function ResidentDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-gray-900">Visitor History</h3>
                 <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
-                  {[...visitors, 
-                    { id: 3, name: 'Sarah Guest', purpose: 'Personal', time: 'Yesterday, 7:00 PM', status: 'Completed' },
-                    { id: 4, name: 'Amazon Delivery', purpose: 'Delivery', time: 'Jan 15, 11:30 AM', status: 'Completed' }
-                  ].length} Total
+                  {visitors.length} Total
                 </span>
               </div>
               <div className="space-y-4">
-                {[...visitors, 
-                  { id: 3, name: 'Sarah Guest', purpose: 'Personal', time: 'Yesterday, 7:00 PM', status: 'Completed' },
-                  { id: 4, name: 'Amazon Delivery', purpose: 'Delivery', time: 'Jan 15, 11:30 AM', status: 'Completed' }
-                ].map(visitor => (
+                {visitors.map(visitor => (
                   <div key={visitor.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start">
                       <div>
@@ -231,15 +424,15 @@ export default function ResidentDashboard() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-gray-700">This Month</p>
-                    <p className="text-lg font-bold text-blue-700">8</p>
+                    <p className="text-lg font-bold text-blue-700">{visitorStats.thisMonth}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-700">Active</p>
-                    <p className="text-lg font-bold text-green-700">2</p>
+                    <p className="text-lg font-bold text-green-700">{visitorStats.active}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-700">Pending</p>
-                    <p className="text-lg font-bold text-yellow-700">1</p>
+                    <p className="text-lg font-bold text-yellow-700">{visitorStats.pending}</p>
                   </div>
                 </div>
               </div>
@@ -263,9 +456,7 @@ export default function ResidentDashboard() {
                 </p>
               </div>
               <button
-                onClick={() => {
-                  setAnnouncements(announcements.map(ann => ({ ...ann, read: true })))
-                }}
+                onClick={markAllAsRead}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium"
               >
                 Mark All Read

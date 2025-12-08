@@ -3,6 +3,137 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Hardcoded database simulation
+const HARDCODED_DATA = {
+  visitors: [
+    { id: 1, name: 'John Delivery', code: 'ABC123', pin: '4567', resident: 'A-101', purpose: 'Delivery', entryTime: '10:30 AM', status: 'active' },
+    { id: 2, name: 'Electrician', code: 'XYZ789', pin: '8910', resident: 'B-202', purpose: 'Service', entryTime: '2:00 PM', status: 'active' },
+    { id: 3, name: 'Amazon Delivery', code: 'DEL456', pin: '1234', resident: 'C-303', purpose: 'Delivery', entryTime: '4:15 PM', status: 'pending' }
+  ],
+  logs: [
+    { id: 1, visitor: 'John Delivery', code: 'ABC123', type: 'entry', time: '10:30 AM', verified: true },
+    { id: 2, visitor: 'Electrician', code: 'XYZ789', type: 'entry', time: '2:00 PM', verified: true },
+    { id: 3, visitor: 'Sarah Guest', code: 'GUEST01', type: 'exit', time: '1:45 PM', verified: true },
+    { id: 4, visitor: 'Amazon Delivery', code: 'DEL456', type: 'entry', time: '4:15 PM', verified: false }
+  ],
+  alerts: [
+    { id: 1, type: 'panic', unit: 'C-303', time: '9:15 AM', status: 'responded', priority: 'high' },
+    { id: 2, type: 'unauthorized', location: 'Gate 2', time: '11:30 AM', status: 'investigating', priority: 'medium' },
+    { id: 3, type: 'suspicious', location: 'Parking Area', time: '3:45 PM', status: 'pending', priority: 'low' }
+  ],
+  announcements: [
+    { id: 1, title: 'Security Patrol Update', message: 'Night patrol timings changed to 10 PM - 6 AM', type: 'security', time: '2 hours ago' },
+    { id: 2, title: 'CCTV Maintenance', message: 'Camera maintenance in Parking Area from 2-4 PM', type: 'maintenance', time: '1 day ago' },
+    { id: 3, title: 'Visitor Policy Update', message: 'New visitor verification process effective tomorrow', type: 'policy', time: '2 days ago' }
+  ]
+}
+
+// Blacklisted codes
+const BLACKLISTED_CODES = ['BLOCK123', 'BLOCK456', 'DENY789']
+
+// Mock API functions
+const mockAPI = {
+  // Get visitors
+  async getVisitors() {
+    try {
+      // Try to fetch from placeholder API
+      const response = await fetch('https://jsonplaceholder.typicode.com/users?_limit=3');
+      const data = await response.json();
+      
+      return data.map((user, index) => ({
+        id: user.id,
+        name: user.name,
+        code: `CODE${user.id}`,
+        pin: Math.floor(1000 + Math.random() * 9000).toString(),
+        resident: ['A-101', 'B-202', 'C-303'][index],
+        purpose: ['Delivery', 'Service', 'Guest'][index],
+        entryTime: ['10:30 AM', '2:00 PM', '4:15 PM'][index],
+        status: ['active', 'active', 'pending'][index]
+      }));
+    } catch (error) {
+      console.log('Using hardcoded visitors data');
+      return HARDCODED_DATA.visitors;
+    }
+  },
+
+  // Get logs
+  async getLogs() {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=4');
+      const data = await response.json();
+      
+      return data.map((post, index) => ({
+        id: post.id,
+        visitor: `Visitor ${post.id}`,
+        code: `CODE${post.id}`,
+        type: index % 2 === 0 ? 'entry' : 'exit',
+        time: ['10:30 AM', '2:00 PM', '1:45 PM', '4:15 PM'][index],
+        verified: index !== 3
+      }));
+    } catch (error) {
+      console.log('Using hardcoded logs data');
+      return HARDCODED_DATA.logs;
+    }
+  },
+
+  // Get alerts
+  async getAlerts() {
+    return HARDCODED_DATA.alerts;
+  },
+
+  // Get announcements
+  async getAnnouncements() {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/comments?_limit=3');
+      const data = await response.json();
+      
+      return data.map((comment, index) => ({
+        id: comment.id,
+        title: comment.name.substring(0, 30) + '...',
+        message: comment.body.substring(0, 100) + '...',
+        type: ['security', 'maintenance', 'policy'][index],
+        time: ['2 hours ago', '1 day ago', '2 days ago'][index]
+      }));
+    } catch (error) {
+      console.log('Using hardcoded announcements data');
+      return HARDCODED_DATA.announcements;
+    }
+  },
+
+  // Update visitor status
+  async updateVisitorStatus(visitorId, updates) {
+    const visitorIndex = HARDCODED_DATA.visitors.findIndex(v => v.id === visitorId);
+    if (visitorIndex !== -1) {
+      HARDCODED_DATA.visitors[visitorIndex] = {
+        ...HARDCODED_DATA.visitors[visitorIndex],
+        ...updates
+      };
+    }
+    return { success: true };
+  },
+
+  // Add log entry
+  async addLogEntry(log) {
+    HARDCODED_DATA.logs.unshift(log);
+    return { success: true, id: log.id };
+  },
+
+  // Add security alert
+  async addSecurityAlert(alert) {
+    HARDCODED_DATA.alerts.unshift(alert);
+    return { success: true, id: alert.id };
+  },
+
+  // Update alert status
+  async updateAlertStatus(alertId, status) {
+    const alertIndex = HARDCODED_DATA.alerts.findIndex(a => a.id === alertId);
+    if (alertIndex !== -1) {
+      HARDCODED_DATA.alerts[alertIndex].status = status;
+    }
+    return { success: true };
+  }
+};
+
 export default function SecurityDashboard() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('visitors')
@@ -13,6 +144,7 @@ export default function SecurityDashboard() {
   const [securityAlerts, setSecurityAlerts] = useState([])
   const [announcements, setAnnouncements] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [securityStats, setSecurityStats] = useState({
     entriesToday: 0,
     exitsToday: 0,
@@ -20,61 +152,51 @@ export default function SecurityDashboard() {
     pendingVerifications: 0
   })
 
-  // Mock data
-  const mockVisitors = [
-    { id: 1, name: 'John Delivery', code: 'ABC123', pin: '4567', resident: 'A-101', purpose: 'Delivery', entryTime: '10:30 AM', status: 'active' },
-    { id: 2, name: 'Electrician', code: 'XYZ789', pin: '8910', resident: 'B-202', purpose: 'Service', entryTime: '2:00 PM', status: 'active' },
-    { id: 3, name: 'Amazon Delivery', code: 'DEL456', pin: '1234', resident: 'C-303', purpose: 'Delivery', entryTime: '4:15 PM', status: 'pending' }
-  ]
-
-  const mockLogs = [
-    { id: 1, visitor: 'John Delivery', code: 'ABC123', type: 'entry', time: '10:30 AM', verified: true },
-    { id: 2, visitor: 'Electrician', code: 'XYZ789', type: 'entry', time: '2:00 PM', verified: true },
-    { id: 3, visitor: 'Sarah Guest', code: 'GUEST01', type: 'exit', time: '1:45 PM', verified: true },
-    { id: 4, visitor: 'Amazon Delivery', code: 'DEL456', type: 'entry', time: '4:15 PM', verified: false }
-  ]
-
-  const mockAlerts = [
-    { id: 1, type: 'panic', unit: 'C-303', time: '9:15 AM', status: 'responded', priority: 'high' },
-    { id: 2, type: 'unauthorized', location: 'Gate 2', time: '11:30 AM', status: 'investigating', priority: 'medium' },
-    { id: 3, type: 'suspicious', location: 'Parking Area', time: '3:45 PM', status: 'pending', priority: 'low' }
-  ]
-
-  const mockAnnouncements = [
-    { id: 1, title: 'Security Patrol Update', message: 'Night patrol timings changed to 10 PM - 6 AM', type: 'security', time: '2 hours ago' },
-    { id: 2, title: 'CCTV Maintenance', message: 'Camera maintenance in Parking Area from 2-4 PM', type: 'maintenance', time: '1 day ago' },
-    { id: 3, title: 'Visitor Policy Update', message: 'New visitor verification process effective tomorrow', type: 'policy', time: '2 days ago' }
-  ]
-
+  // Load data on component mount
   useEffect(() => {
-    // Load data
-    setCurrentVisitors(mockVisitors)
-    setTodayLogs(mockLogs)
-    setSecurityAlerts(mockAlerts)
-    setAnnouncements(mockAnnouncements)
+    const loadData = async () => {
+      setIsLoadingData(true);
+      try {
+        const [visitorsData, logsData, alertsData, announcementsData] = await Promise.all([
+          mockAPI.getVisitors(),
+          mockAPI.getLogs(),
+          mockAPI.getAlerts(),
+          mockAPI.getAnnouncements()
+        ]);
+        
+        setCurrentVisitors(visitorsData);
+        setTodayLogs(logsData);
+        setSecurityAlerts(alertsData);
+        setAnnouncements(announcementsData);
 
-    // Calculate stats
-    const entries = mockLogs.filter(log => log.type === 'entry').length
-    const exits = mockLogs.filter(log => log.type === 'exit').length
-    const active = mockVisitors.filter(v => v.status === 'active').length
-    const pending = mockVisitors.filter(v => v.status === 'pending').length
+        // Calculate stats
+        const entries = logsData.filter(log => log.type === 'entry').length;
+        const exits = logsData.filter(log => log.type === 'exit').length;
+        const active = visitorsData.filter(v => v.status === 'active').length;
+        const pending = visitorsData.filter(v => v.status === 'pending').length;
 
-    setSecurityStats({
-      entriesToday: entries,
-      exitsToday: exits,
-      activeVisitors: active,
-      pendingVerifications: pending
-    })
+        setSecurityStats({
+          entriesToday: entries,
+          exitsToday: exits,
+          activeVisitors: active,
+          pendingVerifications: pending
+        });
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Fallback to hardcoded data
+        setCurrentVisitors(HARDCODED_DATA.visitors);
+        setTodayLogs(HARDCODED_DATA.logs);
+        setSecurityAlerts(HARDCODED_DATA.alerts);
+        setAnnouncements(HARDCODED_DATA.announcements);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
 
-    // Load from localStorage if available
-    const savedVisitors = localStorage.getItem('securityVisitors')
-    const savedLogs = localStorage.getItem('securityLogs')
-    
-    if (savedVisitors) setCurrentVisitors(JSON.parse(savedVisitors))
-    if (savedLogs) setTodayLogs(JSON.parse(savedLogs))
+    loadData();
   }, [])
 
-  const handleVerifyVisitor = () => {
+  const handleVerifyVisitor = async () => {
     if (!visitorCode || !visitorPin) {
       alert('Please enter both Pass Code and PIN')
       return
@@ -82,19 +204,30 @@ export default function SecurityDashboard() {
 
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      const visitor = mockVisitors.find(v => v.code === visitorCode && v.pin === visitorPin)
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const visitor = currentVisitors.find(v => v.code === visitorCode && v.pin === visitorPin)
       
       if (visitor) {
-        // Update visitor status
-        const updatedVisitors = currentVisitors.map(v => 
-          v.code === visitorCode ? { ...v, status: 'active', entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) } : v
-        )
-        setCurrentVisitors(updatedVisitors)
-        localStorage.setItem('securityVisitors', JSON.stringify(updatedVisitors))
+        // Update visitor status via API
+        await mockAPI.updateVisitorStatus(visitor.id, {
+          status: 'active',
+          entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
 
-        // Add to logs
+        // Update local state
+        const updatedVisitors = currentVisitors.map(v => 
+          v.code === visitorCode ? { 
+            ...v, 
+            status: 'active', 
+            entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+          } : v
+        );
+        setCurrentVisitors(updatedVisitors);
+
+        // Add to logs via API
         const newLog = {
           id: Date.now(),
           visitor: visitor.name,
@@ -102,11 +235,13 @@ export default function SecurityDashboard() {
           type: 'entry',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           verified: true
-        }
+        };
 
-        const updatedLogs = [newLog, ...todayLogs]
-        setTodayLogs(updatedLogs)
-        localStorage.setItem('securityLogs', JSON.stringify(updatedLogs))
+        await mockAPI.addLogEntry(newLog);
+
+        // Update local logs state
+        const updatedLogs = [newLog, ...todayLogs];
+        setTodayLogs(updatedLogs);
 
         // Update stats
         setSecurityStats(prev => ({
@@ -114,17 +249,17 @@ export default function SecurityDashboard() {
           entriesToday: prev.entriesToday + 1,
           activeVisitors: prev.activeVisitors + 1,
           pendingVerifications: prev.pendingVerifications > 0 ? prev.pendingVerifications - 1 : 0
-        }))
+        }));
 
-        alert(`✅ Visitor ${visitor.name} verified successfully!\nAccess granted.`)
+        alert(`✅ Visitor ${visitor.name} verified successfully!\nAccess granted.`);
       } else {
         // Check if blacklisted
-        const isBlacklisted = checkBlacklist(visitorCode)
+        const isBlacklisted = BLACKLISTED_CODES.includes(visitorCode);
         
         if (isBlacklisted) {
-          alert(`🚨 BLACKLISTED VISITOR DETECTED!\nPass Code: ${visitorCode}\nSecurity notified. Access denied.`)
+          alert(`🚨 BLACKLISTED VISITOR DETECTED!\nPass Code: ${visitorCode}\nSecurity notified. Access denied.`);
           
-          // Log security incident
+          // Log security incident via API
           const incident = {
             id: Date.now(),
             type: 'blacklist_attempt',
@@ -132,55 +267,67 @@ export default function SecurityDashboard() {
             time: new Date().toLocaleTimeString(),
             action: 'Denied entry',
             priority: 'high'
-          }
-          setSecurityAlerts(prev => [incident, ...prev])
+          };
+          
+          await mockAPI.addSecurityAlert(incident);
+          
+          // Update local alerts state
+          setSecurityAlerts(prev => [incident, ...prev]);
         } else {
-          alert('❌ Invalid Pass Code or PIN. Please check and try again.')
+          alert('❌ Invalid Pass Code or PIN. Please check and try again.');
         }
       }
 
-      setVisitorCode('')
-      setVisitorPin('')
-      setIsLoading(false)
-    }, 1000)
+      setVisitorCode('');
+      setVisitorPin('');
+    } catch (error) {
+      console.error('Error verifying visitor:', error);
+      alert('Error verifying visitor. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  const checkBlacklist = (code) => {
-    const blacklistedCodes = ['BLOCK123', 'BLOCK456', 'DENY789']
-    return blacklistedCodes.includes(code)
-  }
-
-  const handleCheckout = (visitorId) => {
+  const handleCheckout = async (visitorId) => {
     const visitor = currentVisitors.find(v => v.id === visitorId)
     if (!visitor) return
 
-    // Remove from current visitors
-    const updatedVisitors = currentVisitors.filter(v => v.id !== visitorId)
-    setCurrentVisitors(updatedVisitors)
-    localStorage.setItem('securityVisitors', JSON.stringify(updatedVisitors))
+    try {
+      // Remove from current visitors in API
+      await mockAPI.updateVisitorStatus(visitorId, { status: 'checked-out' });
 
-    // Add exit log
-    const newLog = {
-      id: Date.now(),
-      visitor: visitor.name,
-      code: visitor.code,
-      type: 'exit',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      verified: true
+      // Update local state
+      const updatedVisitors = currentVisitors.filter(v => v.id !== visitorId);
+      setCurrentVisitors(updatedVisitors);
+
+      // Add exit log via API
+      const newLog = {
+        id: Date.now(),
+        visitor: visitor.name,
+        code: visitor.code,
+        type: 'exit',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        verified: true
+      };
+
+      await mockAPI.addLogEntry(newLog);
+
+      // Update local logs state
+      const updatedLogs = [newLog, ...todayLogs];
+      setTodayLogs(updatedLogs);
+
+      // Update stats
+      setSecurityStats(prev => ({
+        ...prev,
+        exitsToday: prev.exitsToday + 1,
+        activeVisitors: prev.activeVisitors > 0 ? prev.activeVisitors - 1 : 0
+      }));
+
+      alert(`Visitor ${visitor.name} checked out at ${new Date().toLocaleTimeString()}`);
+    } catch (error) {
+      console.error('Error checking out visitor:', error);
+      alert('Error checking out visitor. Please try again.');
     }
-
-    const updatedLogs = [newLog, ...todayLogs]
-    setTodayLogs(updatedLogs)
-    localStorage.setItem('securityLogs', JSON.stringify(updatedLogs))
-
-    // Update stats
-    setSecurityStats(prev => ({
-      ...prev,
-      exitsToday: prev.exitsToday + 1,
-      activeVisitors: prev.activeVisitors > 0 ? prev.activeVisitors - 1 : 0
-    }))
-
-    alert(`Visitor ${visitor.name} checked out at ${new Date().toLocaleTimeString()}`)
   }
 
   const handleTestBlacklist = () => {
@@ -189,25 +336,42 @@ export default function SecurityDashboard() {
     alert('Test blacklisted visitor loaded. Try verifying to see the alert.')
   }
 
-  const handleMarkAlertResolved = (alertId) => {
-    setSecurityAlerts(prev => 
-      prev.map(alert => 
-        alert.id === alertId ? { ...alert, status: 'resolved' } : alert
-      )
-    )
-    alert('Alert marked as resolved')
+  const handleMarkAlertResolved = async (alertId) => {
+    try {
+      await mockAPI.updateAlertStatus(alertId, 'resolved');
+      
+      // Update local state
+      setSecurityAlerts(prev => 
+        prev.map(alert => 
+          alert.id === alertId ? { ...alert, status: 'resolved' } : alert
+        )
+      );
+      
+      alert('Alert marked as resolved');
+    } catch (error) {
+      console.error('Error updating alert:', error);
+      alert('Error updating alert. Please try again.');
+    }
   }
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userName')
-      router.push('/login')
+      // Clear session storage
+      sessionStorage.removeItem('currentUser');
+      sessionStorage.removeItem('sessionId');
+      router.push('/login');
     }
   }
 
   const getUserName = () => {
-    return localStorage.getItem('userName') || 'Security Officer'
+    if (typeof window !== 'undefined') {
+      const userData = sessionStorage.getItem('currentUser');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.name || 'Security Officer';
+      }
+    }
+    return 'Security Officer';
   }
 
   const getShiftInfo = () => {
@@ -215,6 +379,17 @@ export default function SecurityDashboard() {
     if (hour >= 6 && hour < 14) return 'Morning Shift (6 AM - 2 PM)'
     if (hour >= 14 && hour < 22) return 'Evening Shift (2 PM - 10 PM)'
     return 'Night Shift (10 PM - 6 AM)'
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Loading Security Dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

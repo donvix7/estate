@@ -3,6 +3,119 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Hardcoded database simulation
+const HARDCODED_DATA = {
+  announcements: [
+    {
+      id: 1,
+      title: 'Security Patrol Update',
+      message: 'Night patrol timings changed to 10 PM - 6 AM',
+      type: 'security',
+      priority: 'normal',
+      author: 'Security Chief',
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      read: false
+    },
+    {
+      id: 2,
+      title: 'Emergency Drill Today',
+      message: 'Fire safety drill at 4 PM in Block B',
+      type: 'emergency',
+      priority: 'high',
+      author: 'Admin',
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      read: true
+    },
+    {
+      id: 3,
+      title: 'CCTV Maintenance',
+      message: 'Camera maintenance in Parking Area from 2-4 PM',
+      type: 'maintenance',
+      priority: 'normal',
+      author: 'Security',
+      timestamp: new Date(Date.now() - 86400000).toISOString(),
+      read: true
+    }
+  ],
+  broadcasts: [],
+  securityIncidents: [],
+  emergencyAlerts: [],
+  userData: {
+    name: 'Security Officer',
+    gateStation: 'Gate 1',
+    type: 'security'
+  }
+}
+
+// Simulated API calls
+const mockAPI = {
+  // Get announcements from placeholder API or fallback to hardcoded data
+  async getAnnouncements() {
+    try {
+      // Using JSONPlaceholder as a placeholder API
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=3');
+      const data = await response.json();
+      
+      // Transform placeholder data to our format
+      return data.map((post, index) => ({
+        id: post.id,
+        title: `Announcement: ${post.title.split(' ').slice(0, 3).join(' ')}`,
+        message: post.body,
+        type: ['general', 'security', 'maintenance'][index % 3],
+        priority: ['normal', 'high', 'normal'][index % 3],
+        author: `User ${post.userId}`,
+        timestamp: new Date(Date.now() - (index * 3600000)).toISOString(),
+        read: index > 0
+      }));
+    } catch (error) {
+      console.log('Using hardcoded announcements data');
+      return HARDCODED_DATA.announcements;
+    }
+  },
+
+  // Save announcements to placeholder API (simulated)
+  async saveAnnouncement(announcement) {
+    try {
+      // This is a simulated API call - JSONPlaceholder doesn't actually save
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+        method: 'POST',
+        body: JSON.stringify(announcement),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+      });
+      await response.json();
+      return { success: true, id: Date.now() };
+    } catch (error) {
+      console.log('Simulating save to in-memory database');
+      return { success: true, id: Date.now() };
+    }
+  },
+
+  // Get user data
+  async getUserData() {
+    return HARDCODED_DATA.userData;
+  },
+
+  // Save security incident
+  async saveSecurityIncident(incident) {
+    HARDCODED_DATA.securityIncidents.unshift(incident);
+    return { success: true };
+  },
+
+  // Save broadcast
+  async saveBroadcast(broadcast) {
+    HARDCODED_DATA.broadcasts.unshift(broadcast);
+    return { success: true };
+  },
+
+  // Save emergency alert
+  async saveEmergencyAlert(alert) {
+    HARDCODED_DATA.emergencyAlerts.unshift(alert);
+    return { success: true };
+  }
+};
+
 export default function SecurityDashboard() {
   const router = useRouter()
   const [visitorCode, setVisitorCode] = useState('')
@@ -17,63 +130,38 @@ export default function SecurityDashboard() {
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: '',
     message: '',
-    type: 'general', // general, emergency, maintenance, security
-    priority: 'normal' // normal, high, urgent
+    type: 'general',
+    priority: 'normal'
   })
-  const [activeTab, setActiveTab] = useState('visitors') // visitors, announcements, broadcast
+  const [activeTab, setActiveTab] = useState('visitors')
+  const [userData, setUserData] = useState(HARDCODED_DATA.userData)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Load announcements from localStorage on component mount
+  // Load announcements and user data on component mount
   useEffect(() => {
-    const savedAnnouncements = localStorage.getItem('securityAnnouncements')
-    if (savedAnnouncements) {
-      setAnnouncements(JSON.parse(savedAnnouncements))
-    } else {
-      // Default announcements
-      const defaultAnnouncements = [
-        {
-          id: 1,
-          title: 'Security Patrol Update',
-          message: 'Night patrol timings changed to 10 PM - 6 AM',
-          type: 'security',
-          priority: 'normal',
-          author: 'Security Chief',
-          timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-          read: false
-        },
-        {
-          id: 2,
-          title: 'Emergency Drill Today',
-          message: 'Fire safety drill at 4 PM in Block B',
-          type: 'emergency',
-          priority: 'high',
-          author: 'Admin',
-          timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-          read: true
-        },
-        {
-          id: 3,
-          title: 'CCTV Maintenance',
-          message: 'Camera maintenance in Parking Area from 2-4 PM',
-          type: 'maintenance',
-          priority: 'normal',
-          author: 'Security',
-          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          read: true
-        }
-      ]
-      setAnnouncements(defaultAnnouncements)
-      localStorage.setItem('securityAnnouncements', JSON.stringify(defaultAnnouncements))
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        const [announcementsData, userData] = await Promise.all([
+          mockAPI.getAnnouncements(),
+          mockAPI.getUserData()
+        ])
+        setAnnouncements(announcementsData)
+        setUserData(userData)
+      } catch (error) {
+        console.error('Error loading data:', error)
+        // Fallback to hardcoded data
+        setAnnouncements(HARDCODED_DATA.announcements)
+        setUserData(HARDCODED_DATA.userData)
+      } finally {
+        setIsLoading(false)
+      }
     }
+    
+    loadData()
   }, [])
 
-  // Save announcements to localStorage whenever they change
-  useEffect(() => {
-    if (announcements.length > 0) {
-      localStorage.setItem('securityAnnouncements', JSON.stringify(announcements))
-    }
-  }, [announcements])
-
-  const handleVerifyVisitor = () => {
+  const handleVerifyVisitor = async () => {
     if (visitorCode && visitorPin) {
       // Check if visitor is on blacklist
       const isBlacklisted = checkBlacklist(visitorCode)
@@ -81,12 +169,13 @@ export default function SecurityDashboard() {
       if (isBlacklisted) {
         alert(`🚨 BLACKLISTED VISITOR!\nCode: ${visitorCode}\nSecurity notified automatically.`)
         // Log this incident
-        logSecurityIncident({
+        const incident = {
           type: 'blacklist_attempt',
           visitorCode,
           timestamp: new Date().toISOString(),
           action: 'Denied entry'
-        })
+        }
+        await mockAPI.saveSecurityIncident(incident)
       } else {
         alert(`✅ Visitor ${visitorCode} verified with PIN ${visitorPin}\nAccess granted!`)
         // Add to current visitors
@@ -107,15 +196,9 @@ export default function SecurityDashboard() {
   }
 
   const checkBlacklist = (code) => {
-    // Simulated blacklist check
+    // Hardcoded blacklist
     const blacklistedCodes = ['BLOCK123', 'BLOCK456', 'DENY789']
     return blacklistedCodes.includes(code)
-  }
-
-  const logSecurityIncident = (incident) => {
-    const incidents = JSON.parse(localStorage.getItem('securityIncidents') || '[]')
-    incidents.unshift(incident)
-    localStorage.setItem('securityIncidents', JSON.stringify(incidents))
   }
 
   const handleCheckout = (id) => {
@@ -127,7 +210,7 @@ export default function SecurityDashboard() {
   }
 
   // Announcements & Broadcast Functions
-  const handleSendBroadcast = () => {
+  const handleSendBroadcast = async () => {
     if (!newAnnouncement.message.trim()) {
       alert('Please enter a message')
       return
@@ -146,10 +229,11 @@ export default function SecurityDashboard() {
     const updatedAnnouncements = [broadcast, ...announcements]
     setAnnouncements(updatedAnnouncements)
 
-    // Save to broadcast history
-    const broadcasts = JSON.parse(localStorage.getItem('securityBroadcasts') || '[]')
-    broadcasts.unshift(broadcast)
-    localStorage.setItem('securityBroadcasts', JSON.stringify(broadcasts))
+    // Save broadcast via API
+    await mockAPI.saveBroadcast(broadcast)
+
+    // Also save as announcement via API
+    await mockAPI.saveAnnouncement(broadcast)
 
     // Show confirmation
     alert(`📢 Broadcast sent!\nType: ${newAnnouncement.type}\nPriority: ${newAnnouncement.priority}\n\nMessage: ${newAnnouncement.message}`)
@@ -163,7 +247,7 @@ export default function SecurityDashboard() {
     })
   }
 
-  const handleSendEmergencyAlert = () => {
+  const handleSendEmergencyAlert = async () => {
     const emergencyMessage = prompt('Enter emergency alert message:')
     if (emergencyMessage) {
       const emergencyAlert = {
@@ -181,10 +265,8 @@ export default function SecurityDashboard() {
       const updatedAnnouncements = [emergencyAlert, ...announcements]
       setAnnouncements(updatedAnnouncements)
 
-      // Save emergency alert
-      const emergencies = JSON.parse(localStorage.getItem('emergencyAlerts') || '[]')
-      emergencies.unshift(emergencyAlert)
-      localStorage.setItem('emergencyAlerts', JSON.stringify(emergencies))
+      // Save emergency alert via API
+      await mockAPI.saveEmergencyAlert(emergencyAlert)
 
       alert('🚨 EMERGENCY ALERT SENT TO ALL RESIDENTS AND ADMIN!')
     }
@@ -239,19 +321,19 @@ export default function SecurityDashboard() {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userName')
-      localStorage.removeItem('userEmail')
       router.push('/login')
     }
   }
 
-  const getUserName = () => {
-    return localStorage.getItem('userName') || 'Security Officer'
-  }
-
-  const getGateStation = () => {
-    return localStorage.getItem('gateStation') || 'Gate 1'
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Loading Security Dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -262,7 +344,10 @@ export default function SecurityDashboard() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold">Security Dashboard</h1>
-              <p className="text-blue-200">{getGateStation()} | Welcome, {getUserName()}</p>
+              <p className="text-blue-200">{userData.gateStation} | Welcome, {userData.name}</p>
+              <p className="text-blue-300 text-sm mt-1">
+                Data loaded from {announcements.some(a => a.id <= 100) ? 'API' : 'hardcoded database'}
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
