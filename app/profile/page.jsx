@@ -212,7 +212,7 @@ export default function ResidentProfilePage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/dashboard/resident')}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
                 ← Back
