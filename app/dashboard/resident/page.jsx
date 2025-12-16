@@ -27,7 +27,10 @@ const HARDCODED_DATA = {
       unitNumber: 'A-101',
       building: 'Tower A',
       phone: '+91 9876543210',
-      joinDate: '2023-01-15'
+      joinDate: '2023-01-15',
+      emergencyContact: '+91 9876543211',
+      familyMembers: 3,
+      vehicleNumber: 'MH01AB1234'
     }
   ]
 }
@@ -96,6 +99,19 @@ const mockAPI = {
   async markAllAnnouncementsAsRead() {
     HARDCODED_DATA.announcements.forEach(ann => ann.read = true);
     return { success: true };
+  },
+
+  // Update resident profile
+  async updateResidentProfile(userId, updatedData) {
+    const residentIndex = HARDCODED_DATA.residents.findIndex(r => r.id === userId);
+    if (residentIndex !== -1) {
+      HARDCODED_DATA.residents[residentIndex] = {
+        ...HARDCODED_DATA.residents[residentIndex],
+        ...updatedData
+      };
+      return { success: true, data: HARDCODED_DATA.residents[residentIndex] };
+    }
+    return { success: false };
   }
 };
 
@@ -106,6 +122,9 @@ export default function ResidentDashboard() {
   const [visitors, setVisitors] = useState([])
   const [residentData, setResidentData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState({})
+  const [saveStatus, setSaveStatus] = useState('')
 
   // Load data on component mount
   useEffect(() => {
@@ -121,12 +140,14 @@ export default function ResidentDashboard() {
         setAnnouncements(announcementsData);
         setVisitors(visitorsData);
         setResidentData(residentData);
+        setEditForm(residentData);
       } catch (error) {
         console.error('Error loading data:', error);
         // Fallback to hardcoded data
         setAnnouncements(HARDCODED_DATA.announcements);
         setVisitors(HARDCODED_DATA.visitors);
         setResidentData(HARDCODED_DATA.residents[0]);
+        setEditForm(HARDCODED_DATA.residents[0]);
       } finally {
         setIsLoading(false);
       }
@@ -172,7 +193,7 @@ export default function ResidentDashboard() {
       // Clear session storage
       sessionStorage.removeItem('currentUser');
       sessionStorage.removeItem('sessionId');
-      router.push('/login');
+      router.push('/register');
     }
   }
 
@@ -233,6 +254,48 @@ export default function ResidentDashboard() {
     };
   }
 
+  const handleEditProfile = () => {
+    setIsEditing(true);
+    setSaveStatus('');
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditForm(residentData);
+    setSaveStatus('');
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaveStatus('saving');
+      const result = await mockAPI.updateResidentProfile(residentData.id, editForm);
+      
+      if (result.success) {
+        setResidentData(result.data);
+        setIsEditing(false);
+        setSaveStatus('success');
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSaveStatus('');
+        }, 3000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setSaveStatus('error');
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
@@ -268,17 +331,18 @@ export default function ResidentDashboard() {
 
       <div className="container mx-auto px-4 py-6">
         {/* Tabs */}
-        <div className="flex border-b mb-6">
+        <div className="flex border-b mb-6 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview', icon: '📊' },
             { id: 'visitors', label: 'Visitors', icon: '👥' },
             { id: 'payments', label: 'Payments', icon: '💰' },
-            { id: 'announcements', label: 'Announcements', icon: '📢', badge: getUnreadCount() }
+            { id: 'announcements', label: 'Announcements', icon: '📢', badge: getUnreadCount() },
+            { id: 'profile', label: 'Profile', icon: '👤' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center px-6 py-3 relative font-medium ${
+              className={`flex items-center px-6 py-3 relative font-medium flex-shrink-0 ${
                 activeTab === tab.id 
                   ? 'border-b-2 border-blue-700 text-blue-700' 
                   : 'text-gray-600 hover:text-gray-900'
@@ -536,6 +600,246 @@ export default function ResidentDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Profile Information</h3>
+              {!isEditing ? (
+                <button
+                  onClick={handleEditProfile}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium flex items-center"
+                >
+                  <span className="mr-2">✏️</span>
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium flex items-center"
+                  >
+                    {saveStatus === 'saving' ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {saveStatus === 'success' && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-700 font-medium">✅ Profile updated successfully!</p>
+              </div>
+            )}
+
+            {saveStatus === 'error' && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-700 font-medium">❌ Error updating profile. Please try again.</p>
+              </div>
+            )}
+
+            {isEditing ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={editForm.name || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={editForm.email || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={editForm.phone || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Emergency Contact
+                    </label>
+                    <input
+                      type="tel"
+                      name="emergencyContact"
+                      value={editForm.emergencyContact || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit Number
+                    </label>
+                    <input
+                      type="text"
+                      name="unitNumber"
+                      value={editForm.unitNumber || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Building
+                    </label>
+                    <input
+                      type="text"
+                      name="building"
+                      value={editForm.building || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Family Members
+                    </label>
+                    <input
+                      type="number"
+                      name="familyMembers"
+                      value={editForm.familyMembers || ''}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Vehicle Number
+                    </label>
+                    <input
+                      type="text"
+                      name="vehicleNumber"
+                      value={editForm.vehicleNumber || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center space-x-6 p-6 bg-blue-50 rounded-xl">
+                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                    {residentData?.name?.charAt(0) || 'R'}
+                  </div>
+                  <div>
+                    <h4 className="text-2xl font-bold text-gray-900">{residentData?.name || 'Resident'}</h4>
+                    <p className="text-gray-700">{residentData?.email || 'resident@demo.com'}</p>
+                    <p className="text-sm text-gray-600 mt-1">Resident since {residentData?.joinDate || '2023-01-15'}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 border border-gray-200 rounded-xl">
+                    <h4 className="font-semibold text-gray-900 mb-4">Contact Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Phone Number</p>
+                        <p className="font-medium text-gray-900">{residentData?.phone || '+91 9876543210'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Emergency Contact</p>
+                        <p className="font-medium text-gray-900">{residentData?.emergencyContact || '+91 9876543211'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Email Address</p>
+                        <p className="font-medium text-gray-900">{residentData?.email || 'resident@demo.com'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border border-gray-200 rounded-xl">
+                    <h4 className="font-semibold text-gray-900 mb-4">Residence Details</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Unit Number</p>
+                        <p className="font-medium text-gray-900">{residentData?.unitNumber || 'A-101'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Building</p>
+                        <p className="font-medium text-gray-900">{residentData?.building || 'Tower A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Family Members</p>
+                        <p className="font-medium text-gray-900">{residentData?.familyMembers || '3'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Vehicle Number</p>
+                        <p className="font-medium text-gray-900">{residentData?.vehicleNumber || 'MH01AB1234'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl">
+                  <h4 className="font-semibold text-gray-900 mb-4">Quick Actions</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                      onClick={() => setActiveTab('visitors')}
+                      className="p-4 bg-white border border-blue-100 rounded-lg hover:bg-blue-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                        <span className="text-blue-600">👥</span>
+                      </div>
+                      <h5 className="font-medium text-gray-900">Manage Visitors</h5>
+                      <p className="text-sm text-gray-600 mt-1">Create and manage visitor passes</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('payments')}
+                      className="p-4 bg-white border border-green-100 rounded-lg hover:bg-green-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+                        <span className="text-green-600">💰</span>
+                      </div>
+                      <h5 className="font-medium text-gray-900">Make Payment</h5>
+                      <p className="text-sm text-gray-600 mt-1">Pay maintenance dues online</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('overview')}
+                      className="p-4 bg-white border border-red-100 rounded-lg hover:bg-red-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mb-3">
+                        <span className="text-red-600">🚨</span>
+                      </div>
+                      <h5 className="font-medium text-gray-900">Panic Button</h5>
+                      <p className="text-sm text-gray-600 mt-1">Emergency assistance</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -359,7 +359,7 @@ export default function SecurityDashboard() {
       // Clear session storage
       sessionStorage.removeItem('currentUser');
       sessionStorage.removeItem('sessionId');
-      router.push('/login');
+      router.push('/register');
     }
   }
 

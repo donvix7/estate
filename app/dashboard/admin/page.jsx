@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Scanner } from '@yudiel/react-qr-scanner'
 
 // Hardcoded database simulation
 const HARDCODED_DATA = {
@@ -41,10 +42,187 @@ const HARDCODED_DATA = {
   securityIncidents: [],
   emergencyAlerts: [],
   userData: {
-    name: 'Security Officer',
-    gateStation: 'Gate 1',
-    type: 'security'
-  }
+    id: 'admin_001',
+    name: 'John Admin',
+    gateStation: 'Main Office',
+    type: 'admin',
+    estateId: 'estate_001' // Admin is associated with this estate
+  },
+  estates: [
+    {
+      id: 'estate_001',
+      name: 'Sunrise Towers',
+      adminId: 'admin_001',
+      address: '123 Main Street, City',
+      units: ['A-101', 'A-102', 'B-201', 'B-202', 'C-301', 'C-302']
+    },
+    {
+      id: 'estate_002',
+      name: 'Lakeview Apartments',
+      adminId: 'admin_002',
+      address: '456 Park Avenue, City',
+      units: ['101', '102', '201', '202', '301', '302']
+    }
+  ],
+  pendingInvites: [
+    {
+      id: 'invite_1',
+      name: 'Test Resident',
+      email: 'test@example.com',
+      unitNumber: 'A-101',
+      phone: '+91 9876543210',
+      role: 'resident',
+      estateId: 'estate_001',
+      token: 'invite_1_token',
+      sentAt: new Date(Date.now() - 86400000).toISOString(),
+      status: 'sent',
+      expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ],
+  staffMembers: [
+    {
+      id: 'staff_001',
+      name: 'John Cleaner',
+      email: 'john.cleaner@estate.com',
+      phone: '+91 9876543201',
+      role: 'cleaning_staff',
+      department: 'Housekeeping',
+      employeeId: 'STF-00123',
+      estateId: 'estate_001',
+      joinDate: '2023-03-15',
+      status: 'active',
+      salary: 18000,
+      workSchedule: 'Mon-Fri, 9AM-6PM',
+      emergencyContact: '+91 9876543202',
+      address: 'Staff Quarters, Block D',
+      skills: ['Cleaning', 'Waste Management', 'Sanitization'],
+      notes: 'Dedicated staff, good performance'
+    },
+    {
+      id: 'staff_002',
+      name: 'Mike Gardener',
+      email: 'mike.gardener@estate.com',
+      phone: '+91 9876543203',
+      role: 'gardener',
+      department: 'Gardening',
+      employeeId: 'STF-00124',
+      estateId: 'estate_001',
+      joinDate: '2023-04-10',
+      status: 'active',
+      salary: 15000,
+      workSchedule: 'Mon-Sat, 7AM-4PM',
+      emergencyContact: '+91 9876543204',
+      address: 'Staff Quarters, Block D',
+      skills: ['Landscaping', 'Plant Care', 'Irrigation'],
+      notes: 'Expert in tropical plants'
+    },
+    {
+      id: 'staff_003',
+      name: 'Raj Electrician',
+      email: 'raj.electrician@estate.com',
+      phone: '+91 9876543205',
+      role: 'electrician',
+      department: 'Maintenance',
+      employeeId: 'STF-00125',
+      estateId: 'estate_001',
+      joinDate: '2023-02-20',
+      status: 'active',
+      salary: 22000,
+      workSchedule: '24/7 On-call',
+      emergencyContact: '+91 9876543206',
+      address: 'Near Estate',
+      skills: ['Electrical Repair', 'Wiring', 'Safety Checks'],
+      notes: 'Certified electrician'
+    },
+    {
+      id: 'staff_004',
+      name: 'Suresh Plumber',
+      email: 'suresh.plumber@estate.com',
+      phone: '+91 9876543207',
+      role: 'plumber',
+      department: 'Maintenance',
+      employeeId: 'STF-00126',
+      estateId: 'estate_001',
+      joinDate: '2023-01-15',
+      status: 'on_leave',
+      salary: 20000,
+      workSchedule: 'Mon-Sat, 8AM-5PM',
+      emergencyContact: '+91 9876543208',
+      address: 'Staff Quarters, Block D',
+      skills: ['Plumbing', 'Water Systems', 'Repair'],
+      notes: 'On medical leave until Feb 1'
+    }
+  ],
+  staffAttendance: [
+    {
+      id: 1,
+      staffId: 'staff_001',
+      date: '2024-01-18',
+      checkIn: '09:00',
+      checkOut: '18:00',
+      hours: 9,
+      status: 'present',
+      notes: ''
+    },
+    {
+      id: 2,
+      staffId: 'staff_002',
+      date: '2024-01-18',
+      checkIn: '07:00',
+      checkOut: '16:00',
+      hours: 9,
+      status: 'present',
+      notes: ''
+    },
+    {
+      id: 3,
+      staffId: 'staff_003',
+      date: '2024-01-18',
+      checkIn: '10:00',
+      checkOut: '18:00',
+      hours: 8,
+      status: 'present',
+      notes: 'Emergency repair in Block A'
+    }
+  ],
+  staffTasks: [
+    {
+      id: 1,
+      title: 'Clean Common Areas - Block A',
+      assignedTo: 'staff_001',
+      assignedName: 'John Cleaner',
+      priority: 'high',
+      status: 'in_progress',
+      dueDate: new Date(Date.now() + 86400000).toISOString(),
+      location: 'Block A, Ground Floor',
+      description: 'Clean corridors, lobby, and common areas',
+      progress: 60
+    },
+    {
+      id: 2,
+      title: 'Garden Maintenance',
+      assignedTo: 'staff_002',
+      assignedName: 'Mike Gardener',
+      priority: 'medium',
+      status: 'pending',
+      dueDate: new Date(Date.now() + 172800000).toISOString(),
+      location: 'Central Garden',
+      description: 'Trim hedges and water plants',
+      progress: 0
+    },
+    {
+      id: 3,
+      title: 'Light Bulb Replacement',
+      assignedTo: 'staff_003',
+      assignedName: 'Raj Electrician',
+      priority: 'high',
+      status: 'completed',
+      dueDate: new Date(Date.now() - 86400000).toISOString(),
+      location: 'Parking Area 2',
+      description: 'Replace faulty bulbs',
+      progress: 100
+    }
+  ]
 }
 
 // Simulated API calls
@@ -97,6 +275,40 @@ const mockAPI = {
     return HARDCODED_DATA.userData;
   },
 
+  // Get estates data
+  async getEstates() {
+    return HARDCODED_DATA.estates;
+  },
+
+  // Get staff members
+  async getStaffMembers() {
+    return HARDCODED_DATA.staffMembers;
+  },
+
+  // Get staff attendance
+  async getStaffAttendance() {
+    return HARDCODED_DATA.staffAttendance;
+  },
+
+  // Get staff tasks
+  async getStaffTasks() {
+    return HARDCODED_DATA.staffTasks;
+  },
+
+  // Get pending invites
+  async getPendingInvites() {
+    return HARDCODED_DATA.pendingInvites;
+  },
+
+  // Get admin's estate
+  async getAdminEstate(adminId) {
+    const estate = HARDCODED_DATA.estates.find(e => e.adminId === adminId);
+    if (!estate) {
+      return HARDCODED_DATA.estates[0];
+    }
+    return estate;
+  },
+
   // Save security incident
   async saveSecurityIncident(incident) {
     HARDCODED_DATA.securityIncidents.unshift(incident);
@@ -113,6 +325,115 @@ const mockAPI = {
   async saveEmergencyAlert(alert) {
     HARDCODED_DATA.emergencyAlerts.unshift(alert);
     return { success: true };
+  },
+
+  // Send user invitation
+  async sendUserInvitation(invitation) {
+    // Generate unique token with estate identifier
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(Math.random() * 1000);
+    const token = `invite_${timestamp}_${randomSuffix}_${invitation.estateId}`;
+    
+    const invitationData = {
+      ...invitation,
+      id: token, // Use token as unique ID
+      token: token,
+      sentAt: new Date().toISOString(),
+      status: 'sent',
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+    };
+    
+    // Remove any existing invites with same email for this estate
+    HARDCODED_DATA.pendingInvites = HARDCODED_DATA.pendingInvites.filter(
+      invite => !(invite.email === invitation.email && invite.estateId === invitation.estateId)
+    );
+    
+    HARDCODED_DATA.pendingInvites.unshift(invitationData);
+    
+    // Simulate email sending
+    console.log('📧 Email sent to:', invitation.email);
+    console.log('Invitation Link:', `${window.location.origin}/invite/${token}`);
+    console.log('Estate-specific identifier:', invitation.estateId);
+    
+    return { 
+      success: true, 
+      invitation: invitationData,
+      message: `Invitation sent to ${invitation.email}` 
+    };
+  },
+
+  // Add new staff member
+  async addStaffMember(staffData) {
+    const staffId = `staff_${Date.now()}`;
+    const employeeId = `STF-${String(Date.now()).slice(-5)}`;
+    
+    const newStaff = {
+      ...staffData,
+      id: staffId,
+      employeeId: employeeId,
+      estateId: 'estate_001',
+      joinDate: new Date().toISOString().split('T')[0],
+      status: 'active'
+    };
+    
+    HARDCODED_DATA.staffMembers.push(newStaff);
+    return { success: true, staff: newStaff };
+  },
+
+  // Update staff member
+  async updateStaffMember(staffId, updates) {
+    const index = HARDCODED_DATA.staffMembers.findIndex(s => s.id === staffId);
+    if (index !== -1) {
+      HARDCODED_DATA.staffMembers[index] = {
+        ...HARDCODED_DATA.staffMembers[index],
+        ...updates
+      };
+      return { success: true, staff: HARDCODED_DATA.staffMembers[index] };
+    }
+    return { success: false };
+  },
+
+  // Delete staff member
+  async deleteStaffMember(staffId) {
+    HARDCODED_DATA.staffMembers = HARDCODED_DATA.staffMembers.filter(s => s.id !== staffId);
+    return { success: true };
+  },
+
+  // Mark attendance
+  async markAttendance(attendanceData) {
+    const newAttendance = {
+      id: Date.now(),
+      ...attendanceData,
+      date: new Date().toISOString().split('T')[0]
+    };
+    
+    HARDCODED_DATA.staffAttendance.unshift(newAttendance);
+    return { success: true, attendance: newAttendance };
+  },
+
+  // Assign task to staff
+  async assignStaffTask(taskData) {
+    const newTask = {
+      id: Date.now(),
+      ...taskData,
+      status: 'pending',
+      progress: 0
+    };
+    
+    HARDCODED_DATA.staffTasks.unshift(newTask);
+    return { success: true, task: newTask };
+  },
+
+  // Update task status
+  async updateTaskStatus(taskId, status) {
+    const index = HARDCODED_DATA.staffTasks.findIndex(t => t.id === taskId);
+    if (index !== -1) {
+      HARDCODED_DATA.staffTasks[index].status = status;
+      HARDCODED_DATA.staffTasks[index].progress = status === 'completed' ? 100 : 
+                                                 status === 'in_progress' ? 50 : 0;
+      return { success: true };
+    }
+    return { success: false };
   }
 };
 
@@ -125,6 +446,12 @@ export default function SecurityDashboard() {
     { id: 2, name: 'Electrician', code: 'XYZ789', resident: 'B-202', purpose: 'Service', entry: '2:00 PM' }
   ])
   
+  // QR Scanner State
+  const [showScanner, setShowScanner] = useState(false)
+  const [scanning, setScanning] = useState(true)
+  const [cameraDevices, setCameraDevices] = useState([])
+  const [selectedCamera, setSelectedCamera] = useState(null)
+  
   // Announcements & Broadcast State
   const [announcements, setAnnouncements] = useState([])
   const [newAnnouncement, setNewAnnouncement] = useState({
@@ -136,23 +463,98 @@ export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState('visitors')
   const [userData, setUserData] = useState(HARDCODED_DATA.userData)
   const [isLoading, setIsLoading] = useState(true)
+  
+  // User Creation State
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    unitNumber: '',
+    phone: '',
+    role: 'resident'
+  })
+  const [estates, setEstates] = useState([])
+  const [adminEstate, setAdminEstate] = useState(null)
+  const [pendingInvites, setPendingInvites] = useState([])
+  const [sendingInvite, setSendingInvite] = useState(false)
+  const [inviteStatus, setInviteStatus] = useState('')
+  
+  // Staff Management State
+  const [staffMembers, setStaffMembers] = useState([])
+  const [staffAttendance, setStaffAttendance] = useState([])
+  const [staffTasks, setStaffTasks] = useState([])
+  const [newStaff, setNewStaff] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'cleaning_staff',
+    department: 'Housekeeping',
+    salary: '',
+    workSchedule: 'Mon-Fri, 9AM-6PM',
+    emergencyContact: '',
+    address: '',
+    skills: '',
+    notes: ''
+  })
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    assignedTo: '',
+    priority: 'medium',
+    dueDate: '',
+    location: ''
+  })
+  const [attendanceData, setAttendanceData] = useState({
+    staffId: '',
+    checkIn: '',
+    checkOut: '',
+    notes: ''
+  })
+  const [editingStaff, setEditingStaff] = useState(null)
+  const [showStaffForm, setShowStaffForm] = useState(false)
 
-  // Load announcements and user data on component mount
+  // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
       try {
-        const [announcementsData, userData] = await Promise.all([
+        const [
+          announcementsData, 
+          userData, 
+          estatesData, 
+          invitesData, 
+          adminEstateData,
+          staffData,
+          attendanceData,
+          tasksData
+        ] = await Promise.all([
           mockAPI.getAnnouncements(),
-          mockAPI.getUserData()
+          mockAPI.getUserData(),
+          mockAPI.getEstates(),
+          mockAPI.getPendingInvites(),
+          mockAPI.getAdminEstate(userData.id || 'admin_001'),
+          mockAPI.getStaffMembers(),
+          mockAPI.getStaffAttendance(),
+          mockAPI.getStaffTasks()
         ])
         setAnnouncements(announcementsData)
         setUserData(userData)
+        setEstates(estatesData)
+        setPendingInvites(invitesData)
+        setAdminEstate(adminEstateData)
+        setStaffMembers(staffData)
+        setStaffAttendance(attendanceData)
+        setStaffTasks(tasksData)
       } catch (error) {
         console.error('Error loading data:', error)
         // Fallback to hardcoded data
         setAnnouncements(HARDCODED_DATA.announcements)
         setUserData(HARDCODED_DATA.userData)
+        setEstates(HARDCODED_DATA.estates)
+        setPendingInvites(HARDCODED_DATA.pendingInvites)
+        setAdminEstate(HARDCODED_DATA.estates[0])
+        setStaffMembers(HARDCODED_DATA.staffMembers)
+        setStaffAttendance(HARDCODED_DATA.staffAttendance)
+        setStaffTasks(HARDCODED_DATA.staffTasks)
       } finally {
         setIsLoading(false)
       }
@@ -161,28 +563,113 @@ export default function SecurityDashboard() {
     loadData()
   }, [])
 
+  // Get available camera devices
+  const getCameraDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter(device => device.kind === 'videoinput')
+      setCameraDevices(videoDevices)
+      if (videoDevices.length > 0) {
+        setSelectedCamera(videoDevices[0].deviceId)
+      }
+    } catch (error) {
+      console.error('Error getting camera devices:', error)
+    }
+  }
+
+  // Load camera devices when scanner is shown
+  useEffect(() => {
+    if (showScanner) {
+      getCameraDevices()
+    }
+  }, [showScanner])
+
+  // Handle QR Code Scan
+  const handleScan = (detectedCodes) => {
+    if (detectedCodes.length > 0 && scanning) {
+      const scannedData = detectedCodes[0].rawValue
+      
+      // Parse QR code data (assuming format: "code:ABC123,pin:4567" or just the code)
+      try {
+        if (scannedData.includes(',')) {
+          // Parse structured data
+          const parts = scannedData.split(',')
+          let code = ''
+          let pin = ''
+          
+          parts.forEach(part => {
+            if (part.includes('code:')) {
+              code = part.split(':')[1]
+            } else if (part.includes('pin:')) {
+              pin = part.split(':')[1]
+            }
+          })
+          
+          if (code) setVisitorCode(code)
+          if (pin) setVisitorPin(pin)
+          
+          // Auto-verify if both code and pin are present
+          if (code && pin) {
+            setTimeout(() => {
+              setShowScanner(false)
+              setScanning(true)
+              handleVerifyVisitor()
+            }, 500)
+          } else {
+            alert(`✅ Code scanned: ${code || scannedData}`)
+            setShowScanner(false)
+            setScanning(true)
+          }
+        } else {
+          // Simple code format
+          setVisitorCode(scannedData)
+          alert(`✅ QR Code scanned: ${scannedData}`)
+          setShowScanner(false)
+          setScanning(true)
+        }
+      } catch (error) {
+        console.error('Error parsing QR code:', error)
+        setVisitorCode(scannedData)
+        setShowScanner(false)
+        setScanning(true)
+      }
+      
+      setScanning(false)
+    }
+  }
+
+  // Handle Scanner Error
+  const handleScannerError = (error) => {
+    console.error('Scanner error:', error)
+    alert(`Camera error: ${error?.message || 'Unable to access camera'}`)
+  }
+
   const handleVerifyVisitor = async () => {
-    if (visitorCode && visitorPin) {
+    // Use visitorCode and visitorPin from state (may be set by QR scanner)
+    const codeToVerify = visitorCode
+    const pinToVerify = visitorPin
+    
+    if (codeToVerify && pinToVerify) {
       // Check if visitor is on blacklist
-      const isBlacklisted = checkBlacklist(visitorCode)
+      const isBlacklisted = checkBlacklist(codeToVerify)
       
       if (isBlacklisted) {
-        alert(`🚨 BLACKLISTED VISITOR!\nCode: ${visitorCode}\nSecurity notified automatically.`)
+        alert(`🚨 BLACKLISTED VISITOR!\nCode: ${codeToVerify}\nSecurity notified automatically.`)
         // Log this incident
         const incident = {
           type: 'blacklist_attempt',
-          visitorCode,
+          visitorCode: codeToVerify,
           timestamp: new Date().toISOString(),
           action: 'Denied entry'
         }
         await mockAPI.saveSecurityIncident(incident)
       } else {
-        alert(`✅ Visitor ${visitorCode} verified with PIN ${visitorPin}\nAccess granted!`)
+        alert(`✅ Visitor ${codeToVerify} verified with PIN ${pinToVerify}\nAccess granted!`)
         // Add to current visitors
         const newVisitor = {
           id: Date.now(),
-          name: `Visitor ${visitorCode}`,
-          code: visitorCode,
+          name: `Visitor ${codeToVerify}`,
+          code: codeToVerify,
           resident: 'Unknown',
           purpose: 'Verified Entry',
           entry: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -192,6 +679,14 @@ export default function SecurityDashboard() {
       
       setVisitorCode('')
       setVisitorPin('')
+    } else if (codeToVerify && !pinToVerify) {
+      // Only code scanned, ask for PIN
+      const pin = prompt(`Enter PIN for visitor code: ${codeToVerify}`)
+      if (pin) {
+        setVisitorPin(pin)
+        // Auto-verify after setting PIN
+        setTimeout(() => handleVerifyVisitor(), 100)
+      }
     }
   }
 
@@ -272,6 +767,340 @@ export default function SecurityDashboard() {
     }
   }
 
+  // User Creation Functions
+  const handleCreateUser = async () => {
+    if (!newUser.name || !newUser.email || !adminEstate) {
+      setInviteStatus({ type: 'error', message: 'Name and email are required' })
+      return
+    }
+
+    setSendingInvite(true)
+    setInviteStatus({ type: 'info', message: 'Sending invitation...' })
+
+    try {
+      const invitationData = {
+        ...newUser,
+        estateId: adminEstate.id // Automatically use admin's estate
+      }
+      
+      const result = await mockAPI.sendUserInvitation(invitationData)
+      
+      if (result.success) {
+        setInviteStatus({ 
+          type: 'success', 
+          message: result.message 
+        })
+        
+        // Update pending invites list
+        setPendingInvites([result.invitation, ...pendingInvites.filter(inv => inv.id !== result.invitation.id)])
+        
+        // Reset form
+        setNewUser({
+          name: '',
+          email: '',
+          unitNumber: '',
+          phone: '',
+          role: 'resident'
+        })
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setInviteStatus('')
+        }, 5000)
+      } else {
+        setInviteStatus({ 
+          type: 'error', 
+          message: 'Failed to send invitation. Please try again.' 
+        })
+      }
+    } catch (error) {
+      console.error('Error sending invitation:', error)
+      setInviteStatus({ 
+        type: 'error', 
+        message: 'An error occurred. Please try again.' 
+      })
+    } finally {
+      setSendingInvite(false)
+    }
+  }
+
+  // Staff Management Functions
+  const handleAddStaff = async () => {
+    if (!newStaff.name || !newStaff.phone) {
+      alert('Name and phone are required')
+      return
+    }
+
+    try {
+      const result = await mockAPI.addStaffMember(newStaff)
+      if (result.success) {
+        setStaffMembers([...staffMembers, result.staff])
+        setNewStaff({
+          name: '',
+          email: '',
+          phone: '',
+          role: 'cleaning_staff',
+          department: 'Housekeeping',
+          salary: '',
+          workSchedule: 'Mon-Fri, 9AM-6PM',
+          emergencyContact: '',
+          address: '',
+          skills: '',
+          notes: ''
+        })
+        setShowStaffForm(false)
+        alert('Staff member added successfully!')
+      }
+    } catch (error) {
+      console.error('Error adding staff:', error)
+      alert('Error adding staff member')
+    }
+  }
+
+  const handleUpdateStaff = async () => {
+    if (!editingStaff) return
+
+    try {
+      const result = await mockAPI.updateStaffMember(editingStaff.id, editingStaff)
+      if (result.success) {
+        setStaffMembers(staffMembers.map(s => 
+          s.id === editingStaff.id ? result.staff : s
+        ))
+        setEditingStaff(null)
+        alert('Staff member updated successfully!')
+      }
+    } catch (error) {
+      console.error('Error updating staff:', error)
+      alert('Error updating staff member')
+    }
+  }
+
+  const handleDeleteStaff = async (staffId) => {
+    if (window.confirm('Are you sure you want to delete this staff member?')) {
+      try {
+        const result = await mockAPI.deleteStaffMember(staffId)
+        if (result.success) {
+          setStaffMembers(staffMembers.filter(s => s.id !== staffId))
+          alert('Staff member deleted successfully!')
+        }
+      } catch (error) {
+        console.error('Error deleting staff:', error)
+        alert('Error deleting staff member')
+      }
+    }
+  }
+
+  const handleMarkAttendance = async () => {
+    if (!attendanceData.staffId || !attendanceData.checkIn) {
+      alert('Staff and check-in time are required')
+      return
+    }
+
+    try {
+      const result = await mockAPI.markAttendance(attendanceData)
+      if (result.success) {
+        setStaffAttendance([result.attendance, ...staffAttendance])
+        setAttendanceData({
+          staffId: '',
+          checkIn: '',
+          checkOut: '',
+          notes: ''
+        })
+        alert('Attendance marked successfully!')
+      }
+    } catch (error) {
+      console.error('Error marking attendance:', error)
+      alert('Error marking attendance')
+    }
+  }
+
+  const handleAssignTask = async () => {
+    if (!newTask.title || !newTask.assignedTo) {
+      alert('Task title and assigned staff are required')
+      return
+    }
+
+    try {
+      const staff = staffMembers.find(s => s.id === newTask.assignedTo)
+      const taskData = {
+        ...newTask,
+        assignedName: staff?.name || 'Unknown'
+      }
+      
+      const result = await mockAPI.assignStaffTask(taskData)
+      if (result.success) {
+        setStaffTasks([result.task, ...staffTasks])
+        setNewTask({
+          title: '',
+          description: '',
+          assignedTo: '',
+          priority: 'medium',
+          dueDate: '',
+          location: ''
+        })
+        alert('Task assigned successfully!')
+      }
+    } catch (error) {
+      console.error('Error assigning task:', error)
+      alert('Error assigning task')
+    }
+  }
+
+  const handleUpdateTaskStatus = async (taskId, status) => {
+    try {
+      const result = await mockAPI.updateTaskStatus(taskId, status)
+      if (result.success) {
+        setStaffTasks(staffTasks.map(task => 
+          task.id === taskId ? { ...task, status, progress: status === 'completed' ? 100 : task.progress } : task
+        ))
+      }
+    } catch (error) {
+      console.error('Error updating task status:', error)
+    }
+  }
+
+  const handleNewUserInputChange = (e) => {
+    const { name, value } = e.target
+    setNewUser(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleStaffInputChange = (e) => {
+    const { name, value } = e.target
+    if (editingStaff) {
+      setEditingStaff(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    } else {
+      setNewStaff(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
+  }
+
+  const handleTaskInputChange = (e) => {
+    const { name, value } = e.target
+    setNewTask(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleAttendanceInputChange = (e) => {
+    const { name, value } = e.target
+    setAttendanceData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const getEstateName = (estateId) => {
+    const estate = estates.find(e => e.id === estateId)
+    return estate ? estate.name : 'Unknown Estate'
+  }
+
+  const getStaffName = (staffId) => {
+    const staff = staffMembers.find(s => s.id === staffId)
+    return staff ? staff.name : 'Unknown Staff'
+  }
+
+  const getStatusColor = (status) => {
+    const colors = {
+      active: 'bg-green-100 text-green-800',
+      inactive: 'bg-gray-100 text-gray-800',
+      on_leave: 'bg-yellow-100 text-yellow-800',
+      terminated: 'bg-red-100 text-red-800',
+      present: 'bg-green-100 text-green-800',
+      absent: 'bg-red-100 text-red-800',
+      late: 'bg-yellow-100 text-yellow-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      in_progress: 'bg-blue-100 text-blue-800',
+      completed: 'bg-green-100 text-green-800'
+    }
+    return colors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const getStatusText = (status) => {
+    const texts = {
+      active: 'Active',
+      inactive: 'Inactive',
+      on_leave: 'On Leave',
+      terminated: 'Terminated',
+      present: 'Present',
+      absent: 'Absent',
+      late: 'Late',
+      pending: 'Pending',
+      in_progress: 'In Progress',
+      completed: 'Completed'
+    }
+    return texts[status] || status
+  }
+
+  const getPriorityColor = (priority) => {
+    const colors = {
+      high: 'bg-red-100 text-red-800',
+      medium: 'bg-orange-100 text-orange-800',
+      low: 'bg-blue-100 text-blue-800',
+      normal: 'bg-blue-100 text-blue-800'
+    }
+    return colors[priority] || colors.normal
+  }
+
+  const getRoleColor = (role) => {
+    const colors = {
+      cleaning_staff: 'bg-blue-100 text-blue-800',
+      gardener: 'bg-green-100 text-green-800',
+      electrician: 'bg-yellow-100 text-yellow-800',
+      plumber: 'bg-purple-100 text-purple-800',
+      security: 'bg-red-100 text-red-800',
+      supervisor: 'bg-indigo-100 text-indigo-800'
+    }
+    return colors[role] || colors.cleaning_staff
+  }
+
+  const getRoleText = (role) => {
+    const texts = {
+      cleaning_staff: 'Cleaning Staff',
+      gardener: 'Gardener',
+      electrician: 'Electrician',
+      plumber: 'Plumber',
+      security: 'Security',
+      supervisor: 'Supervisor'
+    }
+    return texts[role] || role
+  }
+
+  const getTodayAttendance = () => {
+    const today = new Date().toISOString().split('T')[0]
+    return staffAttendance.filter(a => a.date === today)
+  }
+
+  const getActiveStaffCount = () => {
+    return staffMembers.filter(s => s.status === 'active').length
+  }
+
+  const getTodayPresentCount = () => {
+    const todayAttendance = getTodayAttendance()
+    return todayAttendance.filter(a => a.status === 'present').length
+  }
+
+  const getTaskStats = () => {
+    const total = staffTasks.length
+    const completed = staffTasks.filter(t => t.status === 'completed').length
+    const inProgress = staffTasks.filter(t => t.status === 'in_progress').length
+    
+    return {
+      total,
+      completed,
+      inProgress,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
+    }
+  }
+
   const markAsRead = (id) => {
     setAnnouncements(announcements.map(ann => 
       ann.id === id ? { ...ann, read: true } : ann
@@ -300,13 +1129,14 @@ export default function SecurityDashboard() {
     return `${days}d ago`
   }
 
-  const getPriorityColor = (priority) => {
-    const colors = {
-      normal: 'bg-blue-100 text-blue-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800'
+  const getPriorityIcon = (priority) => {
+    const icons = {
+      high: '🔴',
+      medium: '🟡',
+      low: '🔵',
+      normal: '⚪'
     }
-    return colors[priority] || colors.normal
+    return icons[priority] || '⚪'
   }
 
   const getTypeIcon = (type) => {
@@ -319,9 +1149,19 @@ export default function SecurityDashboard() {
     return icons[type] || '📢'
   }
 
+  const getStatusBadge = (status) => {
+    const badges = {
+      sent: 'bg-blue-100 text-blue-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      accepted: 'bg-green-100 text-green-800',
+      expired: 'bg-gray-100 text-gray-800'
+    }
+    return badges[status] || badges.sent
+  }
+
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      router.push('/login')
+      router.push('/register')
     }
   }
 
@@ -336,6 +1176,11 @@ export default function SecurityDashboard() {
     )
   }
 
+  const todayAttendance = getTodayAttendance()
+  const activeStaffCount = getActiveStaffCount()
+  const todayPresentCount = getTodayPresentCount()
+  const taskStats = getTaskStats()
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -346,7 +1191,7 @@ export default function SecurityDashboard() {
               <h1 className="text-2xl font-bold">Security Dashboard</h1>
               <p className="text-blue-200">{userData.gateStation} | Welcome, {userData.name}</p>
               <p className="text-blue-300 text-sm mt-1">
-                Data loaded from {announcements.some(a => a.id <= 100) ? 'API' : 'hardcoded database'}
+                Estate: {adminEstate?.name || 'Loading...'}
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -377,7 +1222,7 @@ export default function SecurityDashboard() {
 
       <div className="container mx-auto px-4 py-6">
         {/* Tab Navigation */}
-        <div className="flex border-b mb-6">
+        <div className="flex border-b mb-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('visitors')}
             className={`px-6 py-3 font-medium ${activeTab === 'visitors' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
@@ -401,6 +1246,23 @@ export default function SecurityDashboard() {
           >
             Broadcast
           </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-6 py-3 font-medium ${activeTab === 'users' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
+          >
+            Create Users
+          </button>
+          <button
+            onClick={() => setActiveTab('staff')}
+            className={`px-6 py-3 font-medium relative ${activeTab === 'staff' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
+          >
+            Staff Management
+            {staffTasks.filter(t => t.status === 'pending').length > 0 && (
+              <span className="absolute -top-1 right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {staffTasks.filter(t => t.status === 'pending').length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Visitor Management Tab */}
@@ -411,16 +1273,38 @@ export default function SecurityDashboard() {
               <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Visitor Verification</h3>
                 
+                {/* QR Scanner Button */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowScanner(true)}
+                    className="w-full px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md flex items-center justify-center space-x-3"
+                  >
+                    <span className="text-2xl">📷</span>
+                    <span className="text-lg">Scan QR Code</span>
+                  </button>
+                  <p className="text-sm text-gray-600 mt-2 text-center">
+                    Use camera to scan visitor QR codes
+                  </p>
+                </div>
+                
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2 text-gray-800">Visitor Pass Code</label>
-                    <input
-                      type="text"
-                      value={visitorCode}
-                      onChange={(e) => setVisitorCode(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                      placeholder="Enter pass code"
-                    />
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={visitorCode}
+                        onChange={(e) => setVisitorCode(e.target.value)}
+                        className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="Enter pass code or scan QR"
+                      />
+                      <button
+                        onClick={() => setShowScanner(true)}
+                        className="px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 border border-blue-300"
+                      >
+                        Scan
+                      </button>
+                    </div>
                   </div>
                   
                   <div>
@@ -776,7 +1660,1058 @@ export default function SecurityDashboard() {
             </div>
           </div>
         )}
+
+        {/* Create Users Tab */}
+        {activeTab === 'users' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Create User Form */}
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Create New User</h3>
+                    <p className="text-gray-700 mt-1">
+                      Estate: <span className="font-semibold text-blue-700">{adminEstate?.name}</span>
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                    Admin Access Only
+                  </span>
+                </div>
+                
+                {/* Status Message */}
+                {inviteStatus && (
+                  <div className={`mb-6 p-4 rounded-lg border ${
+                    inviteStatus.type === 'success' 
+                      ? 'bg-green-50 border-green-200 text-green-700' 
+                      : inviteStatus.type === 'error'
+                      ? 'bg-red-50 border-red-200 text-red-700'
+                      : 'bg-blue-50 border-blue-200 text-blue-700'
+                  }`}>
+                    <div className="flex items-center">
+                      <span className="mr-2">
+                        {inviteStatus.type === 'success' ? '✅' : 
+                         inviteStatus.type === 'error' ? '❌' : '⏳'}
+                      </span>
+                      <span>{inviteStatus.message}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-800">Full Name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={newUser.name}
+                      onChange={handleNewUserInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                      placeholder="Enter full name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-800">Email Address *</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={newUser.email}
+                      onChange={handleNewUserInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                      placeholder="user@example.com"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Phone Number</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={newUser.phone}
+                        onChange={handleNewUserInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="+91 9876543210"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Unit Number</label>
+                      <input
+                        type="text"
+                        name="unitNumber"
+                        value={newUser.unitNumber}
+                        onChange={handleNewUserInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="A-101"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-800">Role</label>
+                    <select
+                      name="role"
+                      value={newUser.role}
+                      onChange={handleNewUserInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                    >
+                      <option value="resident">Resident</option>
+                      <option value="security">Security Personnel</option>
+                      <option value="staff">Staff Member</option>
+                      <option value="admin">Admin (Limited)</option>
+                    </select>
+                  </div>
+                  
+                  {/* Estate Information - Read Only */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">Estate Information</p>
+                        <p className="text-blue-800">{adminEstate?.name}</p>
+                        <p className="text-sm text-blue-700">{adminEstate?.address}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                          Auto-assigned
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-2">
+                      💡 User will automatically be authorized for this estate only
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={handleCreateUser}
+                    disabled={sendingInvite || !newUser.name || !newUser.email || !adminEstate}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {sendingInvite ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Sending Invitation...
+                      </>
+                    ) : (
+                      'Send Invitation Email'
+                    )}
+                  </button>
+                  
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h4 className="font-semibold text-gray-900 mb-2">📧 What happens next?</h4>
+                    <ul className="text-sm text-gray-700 space-y-1">
+                      <li>• User receives email with invitation link</li>
+                      <li>• Link contains unique token with estate identifier</li>
+                      <li>• User clicks link to complete registration</li>
+                      <li>• Account is automatically authorized for <strong>{adminEstate?.name}</strong></li>
+                      <li>• Link expires in 7 days for security</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pending Invitations */}
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Pending Invitations</h3>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                    {pendingInvites.length} Sent
+                  </span>
+                </div>
+                
+                {pendingInvites.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">📨</span>
+                    </div>
+                    <p className="text-gray-700 text-lg">No pending invitations</p>
+                    <p className="text-gray-600 text-sm mt-2">Send your first invitation using the form</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingInvites.map(invite => (
+                      <div key={invite.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-bold text-gray-900">{invite.name}</h4>
+                            <div className="mt-2 space-y-1">
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Email:</span> {invite.email}
+                              </p>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Estate:</span> {getEstateName(invite.estateId)}
+                              </p>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Role:</span> {invite.role}
+                              </p>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Sent:</span> {formatTimeAgo(invite.sentAt)}
+                              </p>
+                            </div>
+                            <div className="mt-3">
+                              <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusBadge(invite.status)}`}>
+                                {invite.status}
+                              </span>
+                              {invite.unitNumber && (
+                                <span className="ml-2 text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                                  Unit: {invite.unitNumber}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500">
+                              Expires: {new Date(invite.expiresAt).toLocaleDateString()}
+                            </div>
+                            <div className="mt-2">
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${window.location.origin}/invite/${invite.token}`);
+                                  alert('Invitation link copied to clipboard!');
+                                }}
+                                className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium"
+                              >
+                                Copy Link
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <p className="text-xs text-gray-600 font-mono break-all">
+                            Token: {invite.token}
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Contains estate identifier: {invite.estateId}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="font-semibold text-green-900 mb-2">Security Features</h4>
+                  <div className="text-sm text-green-800 space-y-1">
+                    <p className="flex items-center">
+                      <span className="mr-2">🔒</span>
+                      <span>Each invitation link is unique and estate-specific</span>
+                    </p>
+                    <p className="flex items-center">
+                      <span className="mr-2">⏳</span>
+                      <span>Links expire after 7 days automatically</span>
+                    </p>
+                    <p className="flex items-center">
+                      <span className="mr-2">🏢</span>
+                      <span>Users can only register for <strong>{adminEstate?.name}</strong></span>
+                    </p>
+                    <p className="flex items-center">
+                      <span className="mr-2">👮</span>
+                      <span>Only authorized admins can send invitations</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Estate Information */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
+              <h3 className="text-xl font-bold text-blue-900 mb-4">Estate-Specific Authorization System</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-2">Current Estate Details</h4>
+                  {adminEstate && (
+                    <div className="bg-white/50 p-4 rounded-lg border border-blue-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-lg font-bold text-purple-800">{adminEstate.name}</h5>
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                          Admin: {userData.name}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 mb-3">{adminEstate.address}</p>
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-900 mb-1">Available Units:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {adminEstate.units.map(unit => (
+                            <span key={unit} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                              {unit}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm text-blue-600">
+                        Estate ID: <code className="bg-blue-50 px-2 py-1 rounded">{adminEstate.id}</code>
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-purple-900 mb-2">How Authorization Works</h4>
+                  <ul className="text-blue-800 space-y-2">
+                    <li className="flex items-start">
+                      <span className="mr-2">1️⃣</span>
+                      <span>Admin logged into <strong>{adminEstate?.name}</strong></span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">2️⃣</span>
+                      <span>Estate identifier <code className="bg-blue-50 px-1 rounded">{adminEstate?.id}</code> is automatically embedded in invitation links</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">3️⃣</span>
+                      <span>User receives email with unique, time-limited invitation link</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">4️⃣</span>
+                      <span>Link validates estate identifier during registration</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">5️⃣</span>
+                      <span>User account is automatically authorized only for this estate</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Staff Management Tab */}
+        {activeTab === 'staff' && (
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-md p-6 border border-green-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">Total Staff</h3>
+                    <p className="text-3xl font-bold text-green-700">{staffMembers.length}</p>
+                    <p className="text-sm text-gray-600 mt-1">{activeStaffCount} active</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-green-600 text-xl">👨‍🔧</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-md p-6 border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">Present Today</h3>
+                    <p className="text-3xl font-bold text-blue-700">{todayPresentCount}</p>
+                    <p className="text-sm text-gray-600 mt-1">Out of {activeStaffCount}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-blue-600 text-xl">✅</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-md p-6 border border-amber-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">Active Tasks</h3>
+                    <p className="text-3xl font-bold text-amber-600">{staffTasks.length}</p>
+                    <p className="text-sm text-gray-600 mt-1">{taskStats.completed} completed</p>
+                  </div>
+                  <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <span className="text-amber-600 text-xl">📋</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-md p-6 border border-purple-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">Departments</h3>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {[...new Set(staffMembers.map(s => s.department))].length}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">Different teams</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-purple-600 text-xl">🏢</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Staff List */}
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Staff Members</h3>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setShowStaffForm(true)}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+                    >
+                      + Add Staff
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  {staffMembers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">👨‍🔧</span>
+                      </div>
+                      <p className="text-gray-700 text-lg">No staff members</p>
+                      <button
+                        onClick={() => setShowStaffForm(true)}
+                        className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        Add First Staff Member
+                      </button>
+                    </div>
+                  ) : (
+                    staffMembers.map(staff => (
+                      <div key={staff.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-blue-600 font-bold">
+                                  {staff.name.charAt(0)}
+                                </span>
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-gray-900">{staff.name}</h4>
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${getRoleColor(staff.role)}`}>
+                                    {getRoleText(staff.role)}
+                                  </span>
+                                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(staff.status)}`}>
+                                    {getStatusText(staff.status)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-3 space-y-1">
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Employee ID:</span> {staff.employeeId}
+                              </p>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Department:</span> {staff.department}
+                              </p>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Phone:</span> {staff.phone}
+                              </p>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Schedule:</span> {staff.workSchedule}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => setEditingStaff(staff)}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteStaff(staff.id)}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        {staff.notes && (
+                          <p className="text-sm text-gray-600 mt-2 border-t pt-2">
+                            <span className="font-medium">Notes:</span> {staff.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Attendance & Tasks */}
+              <div className="space-y-6">
+                {/* Today's Attendance */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">Today's Attendance</h3>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                      {todayAttendance.length} Marked
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 mb-3">Mark Attendance</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Staff Member</label>
+                          <select
+                            name="staffId"
+                            value={attendanceData.staffId}
+                            onChange={handleAttendanceInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          >
+                            <option value="">Select staff member</option>
+                            {staffMembers.map(staff => (
+                              <option key={staff.id} value={staff.id}>
+                                {staff.name} ({staff.department})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-gray-800">Check In</label>
+                            <input
+                              type="time"
+                              name="checkIn"
+                              value={attendanceData.checkIn}
+                              onChange={handleAttendanceInputChange}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-gray-800">Check Out</label>
+                            <input
+                              type="time"
+                              name="checkOut"
+                              value={attendanceData.checkOut}
+                              onChange={handleAttendanceInputChange}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Notes</label>
+                          <input
+                            type="text"
+                            name="notes"
+                            value={attendanceData.notes}
+                            onChange={handleAttendanceInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="Optional notes"
+                          />
+                        </div>
+                        <button
+                          onClick={handleMarkAttendance}
+                          disabled={!attendanceData.staffId || !attendanceData.checkIn}
+                          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          Mark Attendance
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-gray-900">Recent Attendance</h4>
+                      {todayAttendance.length === 0 ? (
+                        <p className="text-gray-600 text-sm">No attendance marked for today</p>
+                      ) : (
+                        todayAttendance.map(record => (
+                          <div key={record.id} className="flex justify-between items-center p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium text-gray-900">{getStaffName(record.staffId)}</p>
+                              <p className="text-sm text-gray-700">
+                                {record.checkIn} - {record.checkOut || 'Present'} • {record.hours}h
+                              </p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
+                              {getStatusText(record.status)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assign Task */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Assign Task</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Task Title *</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={newTask.title}
+                        onChange={handleTaskInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="Enter task title"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Description</label>
+                      <textarea
+                        name="description"
+                        value={newTask.description}
+                        onChange={handleTaskInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        rows="2"
+                        placeholder="Enter task description"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Assign To</label>
+                        <select
+                          name="assignedTo"
+                          value={newTask.assignedTo}
+                          onChange={handleTaskInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        >
+                          <option value="">Select staff</option>
+                          {staffMembers.map(staff => (
+                            <option key={staff.id} value={staff.id}>
+                              {staff.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Priority</label>
+                        <select
+                          name="priority"
+                          value={newTask.priority}
+                          onChange={handleTaskInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Due Date</label>
+                        <input
+                          type="date"
+                          name="dueDate"
+                          value={newTask.dueDate}
+                          onChange={handleTaskInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Location</label>
+                        <input
+                          type="text"
+                          name="location"
+                          value={newTask.location}
+                          onChange={handleTaskInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          placeholder="e.g., Block A"
+                        />
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={handleAssignTask}
+                      disabled={!newTask.title || !newTask.assignedTo}
+                      className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      Assign Task
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Staff Tasks Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Staff Tasks</h3>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  {taskStats.total} Total • {taskStats.completed} Completed
+                </span>
+              </div>
+              
+              <div className="space-y-4">
+                {staffTasks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">📋</span>
+                    </div>
+                    <p className="text-gray-700 text-lg">No tasks assigned</p>
+                  </div>
+                ) : (
+                  staffTasks.map(task => (
+                    <div key={task.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="font-bold text-gray-900">{task.title}</h4>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs text-gray-700">
+                              Assigned to: {task.assignedName}
+                            </span>
+                            <span className="text-xs text-gray-700">
+                              Location: {task.location}
+                            </span>
+                            <span className="text-xs text-gray-700">
+                              Due: {new Date(task.dueDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                            {getPriorityIcon(task.priority)} {task.priority}
+                          </span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                            {getStatusText(task.status)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                task.status === 'completed' ? 'bg-green-600' :
+                                task.status === 'in_progress' ? 'bg-blue-600' : 'bg-yellow-600'
+                              }`}
+                              style={{ width: `${task.progress}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">{task.progress}% complete</p>
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          <button
+                            onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}
+                            disabled={task.status === 'in_progress'}
+                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+                          >
+                            Start
+                          </button>
+                          <button
+                            onClick={() => handleUpdateTaskStatus(task.id, 'completed')}
+                            disabled={task.status === 'completed'}
+                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50"
+                          >
+                            Complete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Staff Form Modal */}
+            {(showStaffForm || editingStaff) && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'}
+                      </h3>
+                      <button
+                        onClick={() => {
+                          setShowStaffForm(false)
+                          setEditingStaff(null)
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Full Name *</label>
+                          <input
+                            type="text"
+                            name="name"
+                            value={editingStaff ? editingStaff.name : newStaff.name}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="Enter full name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Phone Number *</label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={editingStaff ? editingStaff.phone : newStaff.phone}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="+91 9876543210"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Email Address</label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={editingStaff ? editingStaff.email : newStaff.email}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="staff@estate.com"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Role</label>
+                          <select
+                            name="role"
+                            value={editingStaff ? editingStaff.role : newStaff.role}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          >
+                            <option value="cleaning_staff">Cleaning Staff</option>
+                            <option value="gardener">Gardener</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="plumber">Plumber</option>
+                            <option value="security">Security</option>
+                            <option value="supervisor">Supervisor</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Department</label>
+                          <select
+                            name="department"
+                            value={editingStaff ? editingStaff.department : newStaff.department}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          >
+                            <option value="Housekeeping">Housekeeping</option>
+                            <option value="Gardening">Gardening</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Security">Security</option>
+                            <option value="Administration">Administration</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Salary (₹)</label>
+                          <input
+                            type="number"
+                            name="salary"
+                            value={editingStaff ? editingStaff.salary : newStaff.salary}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="Monthly salary"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Work Schedule</label>
+                        <input
+                          type="text"
+                          name="workSchedule"
+                          value={editingStaff ? editingStaff.workSchedule : newStaff.workSchedule}
+                          onChange={handleStaffInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          placeholder="e.g., Mon-Fri, 9AM-6PM"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Emergency Contact</label>
+                          <input
+                            type="tel"
+                            name="emergencyContact"
+                            value={editingStaff ? editingStaff.emergencyContact : newStaff.emergencyContact}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="Emergency phone number"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-800">Address</label>
+                          <input
+                            type="text"
+                            name="address"
+                            value={editingStaff ? editingStaff.address : newStaff.address}
+                            onChange={handleStaffInputChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                            placeholder="Staff accommodation address"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Skills (comma separated)</label>
+                        <input
+                          type="text"
+                          name="skills"
+                          value={editingStaff ? editingStaff.skills : newStaff.skills}
+                          onChange={handleStaffInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          placeholder="e.g., Cleaning, Maintenance, Electrical"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Notes</label>
+                        <textarea
+                          name="notes"
+                          value={editingStaff ? editingStaff.notes : newStaff.notes}
+                          onChange={handleStaffInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                          rows="3"
+                          placeholder="Additional notes about the staff member"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end space-x-3 pt-4">
+                        <button
+                          onClick={() => {
+                            setShowStaffForm(false)
+                            setEditingStaff(null)
+                          }}
+                          className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 font-medium"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={editingStaff ? handleUpdateStaff : handleAddStaff}
+                          disabled={!(editingStaff ? editingStaff.name : newStaff.name) || !(editingStaff ? editingStaff.phone : newStaff.phone)}
+                          className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          {editingStaff ? 'Update Staff' : 'Add Staff'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* QR Scanner Modal */}
+      {showScanner && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Scan QR Code</h3>
+                <button
+                  onClick={() => {
+                    setShowScanner(false)
+                    setScanning(true)
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* Camera Device Selection */}
+              {cameraDevices.length > 1 && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2 text-gray-800">Select Camera</label>
+                  <select
+                    value={selectedCamera || ''}
+                    onChange={(e) => setSelectedCamera(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                  >
+                    {cameraDevices.map(device => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Camera ${device.deviceId}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {/* QR Scanner Component */}
+              <div className="relative rounded-lg overflow-hidden border-2 border-blue-500">
+                <Scanner
+                  onScan={handleScan}
+                  onError={handleScannerError}
+                  constraints={{
+                    deviceId: selectedCamera,
+                    facingMode: 'environment'
+                  }}
+                  paused={!scanning}
+                  components={{
+                    audio: true,
+                    finder: true,
+                    torch: true,
+                  }}
+                  styles={{
+                    container: { height: '400px' }
+                  }}
+                />
+                <div className="absolute inset-0 pointer-events-none border-4 border-transparent">
+                  <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/50 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+              </div>
+              
+              <div className="mt-6 space-y-4">
+                <div className="text-center">
+                  <p className="text-gray-700 mb-2">
+                    📍 Position QR code within the frame
+                  </p>
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                      <span className="text-sm text-gray-600">Ready to scan</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                      <span className="text-sm text-gray-600">Camera active</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={() => setScanning(!scanning)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    {scanning ? 'Pause' : 'Resume'} Scanning
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowScanner(false)
+                      setScanning(true)
+                    }}
+                    className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                  >
+                    Close Scanner
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">QR Code Format</h4>
+                <p className="text-sm text-blue-800">
+                  Supported formats: <code className="bg-blue-100 px-2 py-1 rounded">code:ABC123,pin:4567</code> or just the pass code
+                </p>
+                <p className="text-sm text-blue-800 mt-2">
+                  The scanner will automatically extract visitor code and PIN if present
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

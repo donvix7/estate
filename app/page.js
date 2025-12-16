@@ -43,7 +43,7 @@ export default function HomePage() {
               <h1 className="text-xl font-bold text-gray-900">EstateSecure</h1>
             </div>
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/register')}
               className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-all"
             >
               Get Started
@@ -67,7 +67,7 @@ export default function HomePage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/register')}
               className="px-8 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 text-lg font-medium shadow-lg transition-all"
             >
               Try Demo
@@ -206,7 +206,7 @@ export default function HomePage() {
             Join modern estates using EstateSecure for safer, smarter living.
           </p>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/register')}
             className="px-10 py-4 bg-white text-blue-700 rounded-lg hover:bg-blue-50 text-lg font-semibold shadow-xl transition-all transform hover:scale-105"
           >
             Get Started Free

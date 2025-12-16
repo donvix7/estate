@@ -35,6 +35,15 @@ const USER_DATABASE = {
       gateStation: 'Gate 1',
       shift: 'Day Shift',
       badgeNumber: 'SEC-001'
+    },
+    {
+      id: 4,
+      email: 'staff@demo.com',
+      password: '123456',
+      name: 'Staff Member',
+      type: 'staff',
+      department: 'Maintenance',
+      phone: '+91 9876543212'
     }
   ],
   sessions: []
@@ -121,6 +130,9 @@ export default function LoginPage() {
           case 'security':
             router.push('/dashboard/security')
             break
+          case 'staff':
+            router.push('/dashboard/staff')
+            break
           default:
             router.push('/dashboard/resident')
         }
@@ -159,8 +171,8 @@ export default function LoginPage() {
             {/* User Type Selection */}
             <div>
               <label className="block text-sm font-medium mb-3 text-gray-800">Select Your Role</label>
-              <div className="grid grid-cols-3 gap-2">
-                {['resident', 'admin', 'security'].map((type) => (
+              <div className="grid grid-cols-4 gap-2">
+                {['resident', 'admin', 'security', 'staff'].map((type) => (
                   <button
                     key={type}
                     type="button"
