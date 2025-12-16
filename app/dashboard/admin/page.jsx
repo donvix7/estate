@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Scanner } from '@yudiel/react-qr-scanner'
 
+
 // Hardcoded database simulation
 const HARDCODED_DATA = {
   announcements: [
@@ -1381,7 +1382,7 @@ export default function SecurityDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold">Security Dashboard</h1>
+              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
               <p className="text-blue-200">{userData.gateStation} | Welcome, {userData.name}</p>
               <p className="text-blue-300 text-sm mt-1">
                 Estate: {adminEstate?.name || 'Loading...'}
@@ -1884,6 +1885,12 @@ export default function SecurityDashboard() {
                   <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                     Admin Access Only
                   </span>
+                  <button
+                      onClick={() => router.push('/dashboard/admin/users')}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+                    >
+                      + View Users
+                    </button>
                 </div>
                 
                 {/* Status Message */}
