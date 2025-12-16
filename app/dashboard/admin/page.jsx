@@ -41,12 +41,56 @@ const HARDCODED_DATA = {
   broadcasts: [],
   securityIncidents: [],
   emergencyAlerts: [],
+  currentVisitors: [
+    { 
+      id: 1, 
+      name: 'John Delivery', 
+      code: 'ABC123', 
+      resident: 'A-101', 
+      purpose: 'Delivery', 
+      entry: '10:30 AM',
+      verifiedBy: 'Manual Entry',
+      scanTime: new Date(Date.now() - 7200000).toISOString()
+    },
+    { 
+      id: 2, 
+      name: 'Electrician', 
+      code: 'XYZ789', 
+      resident: 'B-202', 
+      purpose: 'Service', 
+      entry: '2:00 PM',
+      verifiedBy: 'Manual Entry',
+      scanTime: new Date(Date.now() - 3600000).toISOString()
+    }
+  ],
+  securityLogs: [
+    {
+      id: 1,
+      type: 'visitor_verified',
+      visitorCode: 'ABC123',
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      action: 'Entry granted manually',
+      securityPersonnel: 'John Admin',
+      location: 'Main Gate',
+      notes: 'Manual verification'
+    },
+    {
+      id: 2,
+      type: 'visitor_verified',
+      visitorCode: 'XYZ789',
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      action: 'Entry granted manually',
+      securityPersonnel: 'John Admin',
+      location: 'Main Gate',
+      notes: 'Manual verification'
+    }
+  ],
   userData: {
     id: 'admin_001',
     name: 'John Admin',
     gateStation: 'Main Office',
     type: 'admin',
-    estateId: 'estate_001' // Admin is associated with this estate
+    estateId: 'estate_001'
   },
   estates: [
     {
@@ -270,6 +314,73 @@ const mockAPI = {
     }
   },
 
+  // Verify visitor pass with API
+  async verifyVisitorPass(code, pin) {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Check blacklist
+    const blacklistedCodes = ['BLOCK123', 'BLOCK456', 'DENY789'];
+    const isBlacklisted = blacklistedCodes.includes(code);
+    
+    if (isBlacklisted) {
+      return {
+        success: false,
+        message: 'Visitor is blacklisted',
+        blacklisted: true,
+        visitor: null
+      };
+    }
+    
+    // Get random resident
+    const getRandomResident = () => {
+      const residents = ['A-101', 'A-102', 'B-201', 'B-202', 'C-301', 'C-302'];
+      return residents[Math.floor(Math.random() * residents.length)];
+    };
+    
+    // Simulate visitor data
+    const visitorData = {
+      id: `visitor_${Date.now()}`,
+      code: code,
+      pin: pin,
+      name: `Visitor ${code}`,
+      resident: getRandomResident(),
+      purpose: 'Verified Entry',
+      entryTime: new Date().toISOString(),
+      status: 'active',
+      verifiedBy: 'QR Scan'
+    };
+    
+    // Add to current visitors in hardcoded data
+    HARDCODED_DATA.currentVisitors.unshift(visitorData);
+    
+    // Log the verification
+    const logEntry = {
+      id: Date.now(),
+      type: 'visitor_verified',
+      visitorCode: code,
+      timestamp: new Date().toISOString(),
+      action: 'Entry granted via QR scan',
+      securityPersonnel: 'Security Dashboard',
+      location: 'Main Gate',
+      notes: `QR Code scanned and verified with PIN: ${pin}`
+    };
+    
+    HARDCODED_DATA.securityLogs.unshift(logEntry);
+    
+    return {
+      success: true,
+      message: 'Visitor verified successfully',
+      visitor: visitorData,
+      log: logEntry
+    };
+  },
+
+  // Get security logs
+  async getSecurityLogs() {
+    return HARDCODED_DATA.securityLogs || [];
+  },
+
   // Get user data
   async getUserData() {
     return HARDCODED_DATA.userData;
@@ -336,11 +447,11 @@ const mockAPI = {
     
     const invitationData = {
       ...invitation,
-      id: token, // Use token as unique ID
+      id: token,
       token: token,
       sentAt: new Date().toISOString(),
       status: 'sent',
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
     
     // Remove any existing invites with same email for this estate
@@ -352,7 +463,7 @@ const mockAPI = {
     
     // Simulate email sending
     console.log('📧 Email sent to:', invitation.email);
-    console.log('Invitation Link:', `${window.location.origin}/invite/${token}`);
+    console.log('Invitation Link:', `${window.location.origin}/signup/${token}`);
     console.log('Estate-specific identifier:', invitation.estateId);
     
     return { 
@@ -441,10 +552,7 @@ export default function SecurityDashboard() {
   const router = useRouter()
   const [visitorCode, setVisitorCode] = useState('')
   const [visitorPin, setVisitorPin] = useState('')
-  const [currentVisitors, setCurrentVisitors] = useState([
-    { id: 1, name: 'John Delivery', code: 'ABC123', resident: 'A-101', purpose: 'Delivery', entry: '10:30 AM' },
-    { id: 2, name: 'Electrician', code: 'XYZ789', resident: 'B-202', purpose: 'Service', entry: '2:00 PM' }
-  ])
+  const [currentVisitors, setCurrentVisitors] = useState(HARDCODED_DATA.currentVisitors)
   
   // QR Scanner State
   const [showScanner, setShowScanner] = useState(false)
@@ -512,6 +620,9 @@ export default function SecurityDashboard() {
   const [editingStaff, setEditingStaff] = useState(null)
   const [showStaffForm, setShowStaffForm] = useState(false)
 
+  // Security Logs State
+  const [securityLogs, setSecurityLogs] = useState([])
+
   // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
@@ -525,7 +636,8 @@ export default function SecurityDashboard() {
           adminEstateData,
           staffData,
           attendanceData,
-          tasksData
+          tasksData,
+          logsData
         ] = await Promise.all([
           mockAPI.getAnnouncements(),
           mockAPI.getUserData(),
@@ -534,7 +646,8 @@ export default function SecurityDashboard() {
           mockAPI.getAdminEstate(userData.id || 'admin_001'),
           mockAPI.getStaffMembers(),
           mockAPI.getStaffAttendance(),
-          mockAPI.getStaffTasks()
+          mockAPI.getStaffTasks(),
+          mockAPI.getSecurityLogs()
         ])
         setAnnouncements(announcementsData)
         setUserData(userData)
@@ -544,6 +657,7 @@ export default function SecurityDashboard() {
         setStaffMembers(staffData)
         setStaffAttendance(attendanceData)
         setStaffTasks(tasksData)
+        setSecurityLogs(logsData)
       } catch (error) {
         console.error('Error loading data:', error)
         // Fallback to hardcoded data
@@ -555,6 +669,7 @@ export default function SecurityDashboard() {
         setStaffMembers(HARDCODED_DATA.staffMembers)
         setStaffAttendance(HARDCODED_DATA.staffAttendance)
         setStaffTasks(HARDCODED_DATA.staffTasks)
+        setSecurityLogs(HARDCODED_DATA.securityLogs)
       } finally {
         setIsLoading(false)
       }
@@ -585,18 +700,19 @@ export default function SecurityDashboard() {
   }, [showScanner])
 
   // Handle QR Code Scan
-  const handleScan = (detectedCodes) => {
+  const handleScan = async (detectedCodes) => {
     if (detectedCodes.length > 0 && scanning) {
       const scannedData = detectedCodes[0].rawValue
+      setScanning(false) // Pause scanning
       
-      // Parse QR code data (assuming format: "code:ABC123,pin:4567" or just the code)
       try {
+        // Parse QR code data
+        let code = ''
+        let pin = ''
+        
         if (scannedData.includes(',')) {
           // Parse structured data
           const parts = scannedData.split(',')
-          let code = ''
-          let pin = ''
-          
           parts.forEach(part => {
             if (part.includes('code:')) {
               code = part.split(':')[1]
@@ -604,37 +720,40 @@ export default function SecurityDashboard() {
               pin = part.split(':')[1]
             }
           })
-          
-          if (code) setVisitorCode(code)
-          if (pin) setVisitorPin(pin)
-          
-          // Auto-verify if both code and pin are present
-          if (code && pin) {
-            setTimeout(() => {
-              setShowScanner(false)
-              setScanning(true)
-              handleVerifyVisitor()
-            }, 500)
-          } else {
-            alert(`✅ Code scanned: ${code || scannedData}`)
-            setShowScanner(false)
-            setScanning(true)
-          }
         } else {
           // Simple code format
-          setVisitorCode(scannedData)
-          alert(`✅ QR Code scanned: ${scannedData}`)
-          setShowScanner(false)
-          setScanning(true)
+          code = scannedData
         }
+        
+        if (code) {
+          setVisitorCode(code)
+          
+          // If PIN is included in QR, auto-verify
+          if (pin) {
+            setVisitorPin(pin)
+            
+            // Auto-verify after setting PIN
+            setTimeout(async () => {
+              await handleVerifyVisitorWithAPI(code, pin)
+            }, 500)
+          } else {
+            // Only code scanned, ask for PIN
+            alert(`✅ QR Code scanned!\nVisitor Code: ${code}\n\nPlease enter PIN for verification.`)
+            setShowScanner(false)
+            // Focus on PIN input field
+            document.getElementById('pinInput')?.focus()
+          }
+        }
+        
+        setShowScanner(false)
+        setScanning(true)
+        
       } catch (error) {
-        console.error('Error parsing QR code:', error)
-        setVisitorCode(scannedData)
+        console.error('Error processing QR code:', error)
+        alert('Error scanning QR code. Please try again.')
         setShowScanner(false)
         setScanning(true)
       }
-      
-      setScanning(false)
     }
   }
 
@@ -644,41 +763,103 @@ export default function SecurityDashboard() {
     alert(`Camera error: ${error?.message || 'Unable to access camera'}`)
   }
 
+  // Enhanced verification function using API
+  const handleVerifyVisitorWithAPI = async (code, pin) => {
+    if (!code || !pin) {
+      alert('Both code and PIN are required for verification')
+      return
+    }
+    
+    setIsLoading(true)
+    
+    try {
+      const result = await mockAPI.verifyVisitorPass(code, pin)
+      
+      if (result.success) {
+        // Add to current visitors list
+        const newVisitor = {
+          id: Date.now(),
+          name: result.visitor.name,
+          code: code,
+          resident: result.visitor.resident,
+          purpose: result.visitor.purpose,
+          entry: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          verifiedBy: 'QR Scan',
+          scanTime: new Date().toISOString()
+        }
+        
+        setCurrentVisitors([newVisitor, ...currentVisitors])
+        
+        // Update security logs
+        setSecurityLogs([result.log, ...securityLogs])
+        
+        // Show success message
+        alert(`✅ ACCESS GRANTED!\n\nVisitor: ${code}\nResident: ${result.visitor.resident}\nTime: ${new Date().toLocaleTimeString()}\n\nEntry logged successfully.`)
+        
+        // Add to activity log
+        const newAnnouncement = {
+          id: Date.now(),
+          title: 'Visitor Entry - QR Scan',
+          message: `Visitor ${code} granted entry for resident ${result.visitor.resident}`,
+          type: 'security',
+          priority: 'normal',
+          author: 'Security System',
+          timestamp: new Date().toISOString(),
+          read: false
+        }
+        
+        setAnnouncements([newAnnouncement, ...announcements])
+        
+        // Reset fields
+        setVisitorCode('')
+        setVisitorPin('')
+        
+      } else {
+        if (result.blacklisted) {
+          alert(`🚨 BLACKLISTED VISITOR!\n\nCode: ${code}\nSecurity has been notified.\n\nAutomatic incident report generated.`)
+          
+          // Log security incident
+          const incident = {
+            id: Date.now(),
+            title: 'Blacklisted Visitor Attempt',
+            message: `Visitor ${code} attempted entry via QR scan`,
+            type: 'security',
+            priority: 'high',
+            author: 'Security System',
+            timestamp: new Date().toISOString(),
+            read: false
+          }
+          
+          setAnnouncements([incident, ...announcements])
+          
+          // Save security incident
+          await mockAPI.saveSecurityIncident({
+            type: 'blacklist_attempt_qr',
+            visitorCode: code,
+            timestamp: new Date().toISOString(),
+            action: 'Automatically blocked',
+            method: 'QR Scan'
+          })
+        } else {
+          alert(`❌ Verification Failed\n\n${result.message}`)
+        }
+      }
+    } catch (error) {
+      console.error('Verification error:', error)
+      alert('Error verifying visitor. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Original verification function (now using API)
   const handleVerifyVisitor = async () => {
-    // Use visitorCode and visitorPin from state (may be set by QR scanner)
+    // Use visitorCode and visitorPin from state
     const codeToVerify = visitorCode
     const pinToVerify = visitorPin
     
     if (codeToVerify && pinToVerify) {
-      // Check if visitor is on blacklist
-      const isBlacklisted = checkBlacklist(codeToVerify)
-      
-      if (isBlacklisted) {
-        alert(`🚨 BLACKLISTED VISITOR!\nCode: ${codeToVerify}\nSecurity notified automatically.`)
-        // Log this incident
-        const incident = {
-          type: 'blacklist_attempt',
-          visitorCode: codeToVerify,
-          timestamp: new Date().toISOString(),
-          action: 'Denied entry'
-        }
-        await mockAPI.saveSecurityIncident(incident)
-      } else {
-        alert(`✅ Visitor ${codeToVerify} verified with PIN ${pinToVerify}\nAccess granted!`)
-        // Add to current visitors
-        const newVisitor = {
-          id: Date.now(),
-          name: `Visitor ${codeToVerify}`,
-          code: codeToVerify,
-          resident: 'Unknown',
-          purpose: 'Verified Entry',
-          entry: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-        setCurrentVisitors([...currentVisitors, newVisitor])
-      }
-      
-      setVisitorCode('')
-      setVisitorPin('')
+      await handleVerifyVisitorWithAPI(codeToVerify, pinToVerify)
     } else if (codeToVerify && !pinToVerify) {
       // Only code scanned, ask for PIN
       const pin = prompt(`Enter PIN for visitor code: ${codeToVerify}`)
@@ -687,11 +868,12 @@ export default function SecurityDashboard() {
         // Auto-verify after setting PIN
         setTimeout(() => handleVerifyVisitor(), 100)
       }
+    } else {
+      alert('Please enter both code and PIN for verification')
     }
   }
 
   const checkBlacklist = (code) => {
-    // Hardcoded blacklist
     const blacklistedCodes = ['BLOCK123', 'BLOCK456', 'DENY789']
     return blacklistedCodes.includes(code)
   }
@@ -701,6 +883,20 @@ export default function SecurityDashboard() {
     if (visitor) {
       setCurrentVisitors(currentVisitors.filter(v => v.id !== id))
       alert(`Visitor ${visitor.name} (${visitor.code}) checked out at ${new Date().toLocaleTimeString()}`)
+      
+      // Add checkout log
+      const checkoutLog = {
+        id: Date.now(),
+        type: 'visitor_checked_out',
+        visitorCode: visitor.code,
+        timestamp: new Date().toISOString(),
+        action: 'Checked out manually',
+        securityPersonnel: userData.name,
+        location: 'Main Gate',
+        notes: `Visitor ${visitor.name} checked out`
+      }
+      
+      setSecurityLogs([checkoutLog, ...securityLogs])
     }
   }
 
@@ -780,7 +976,7 @@ export default function SecurityDashboard() {
     try {
       const invitationData = {
         ...newUser,
-        estateId: adminEstate.id // Automatically use admin's estate
+        estateId: adminEstate.id
       }
       
       const result = await mockAPI.sendUserInvitation(invitationData)
@@ -791,10 +987,8 @@ export default function SecurityDashboard() {
           message: result.message 
         })
         
-        // Update pending invites list
         setPendingInvites([result.invitation, ...pendingInvites.filter(inv => inv.id !== result.invitation.id)])
         
-        // Reset form
         setNewUser({
           name: '',
           email: '',
@@ -803,7 +997,6 @@ export default function SecurityDashboard() {
           role: 'resident'
         })
         
-        // Clear success message after 5 seconds
         setTimeout(() => {
           setInviteStatus('')
         }, 5000)
@@ -1263,6 +1456,12 @@ export default function SecurityDashboard() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={`px-6 py-3 font-medium ${activeTab === 'logs' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
+          >
+            Security Logs
+          </button>
         </div>
 
         {/* Visitor Management Tab */}
@@ -1311,6 +1510,7 @@ export default function SecurityDashboard() {
                     <label className="block text-sm font-medium mb-2 text-gray-800">PIN Number</label>
                     <input
                       type="password"
+                      id="pinInput"
                       value={visitorPin}
                       onChange={(e) => setVisitorPin(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
@@ -1376,6 +1576,11 @@ export default function SecurityDashboard() {
                                 <span className="font-mono text-sm bg-gray-100 text-gray-900 px-2 py-1 rounded border">
                                   Code: {visitor.code}
                                 </span>
+                                {visitor.verifiedBy && (
+                                  <span className={`ml-2 text-xs px-2 py-1 rounded ${visitor.verifiedBy === 'QR Scan' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                                    {visitor.verifiedBy}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1397,6 +1602,8 @@ export default function SecurityDashboard() {
                   <h4 className="font-semibold text-blue-900 mb-2">Entry/Exit Logs</h4>
                   <p className="text-blue-800 text-sm">
                     Total entries today: {currentVisitors.length + 5}
+                    <br />
+                    QR Scans: {currentVisitors.filter(v => v.verifiedBy === 'QR Scan').length}
                     <br />
                     Last entry: 30 minutes ago
                   </p>
@@ -1802,7 +2009,7 @@ export default function SecurityDashboard() {
                     <h4 className="font-semibold text-gray-900 mb-2">📧 What happens next?</h4>
                     <ul className="text-sm text-gray-700 space-y-1">
                       <li>• User receives email with invitation link</li>
-                      <li>• Link contains unique token with estate identifier</li>
+                      <li>• Link contains unique  with estate identifier</li>
                       <li>• User clicks link to complete registration</li>
                       <li>• Account is automatically authorized for <strong>{adminEstate?.name}</strong></li>
                       <li>• Link expires in 7 days for security</li>
@@ -1867,7 +2074,7 @@ export default function SecurityDashboard() {
                             <div className="mt-2">
                               <button 
                                 onClick={() => {
-                                  navigator.clipboard.writeText(`${window.location.origin}/invite/${invite.token}`);
+                                  navigator.clipboard.writeText(`${window.location.origin}/signup?token=${invite.token}`);
                                   alert('Invitation link copied to clipboard!');
                                 }}
                                 className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium"
@@ -2598,6 +2805,138 @@ export default function SecurityDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Security Logs Tab */}
+        {activeTab === 'logs' && (
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Security Logs</h3>
+                <p className="text-gray-700 mt-1">
+                  All visitor entries, exits, and security incidents
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+                  Export Logs
+                </button>
+                <button className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 font-medium">
+                  Filter Logs
+                </button>
+              </div>
+            </div>
+            
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700 mb-1">Total Entries Today</p>
+                <p className="text-2xl font-bold text-green-800">
+                  {currentVisitors.length + 12}
+                </p>
+              </div>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700 mb-1">QR Scans</p>
+                <p className="text-2xl font-bold text-blue-800">
+                  {currentVisitors.filter(v => v.verifiedBy === 'QR Scan').length}
+                </p>
+              </div>
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-700 mb-1">Manual Entries</p>
+                <p className="text-2xl font-bold text-yellow-800">
+                  {currentVisitors.filter(v => v.verifiedBy !== 'QR Scan').length}
+                </p>
+              </div>
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700 mb-1">Security Incidents</p>
+                <p className="text-2xl font-bold text-red-800">3</p>
+              </div>
+            </div>
+            
+            {/* Logs Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">Time</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">Visitor Code</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">Resident</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">Method</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {currentVisitors.map(visitor => (
+                    <tr key={visitor.id} className="hover:bg-gray-50">
+                      <td className="p-3 text-sm text-gray-900">
+                        {new Date(visitor.scanTime || new Date()).toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </td>
+                      <td className="p-3">
+                        <div className="font-medium text-gray-900">{visitor.code}</div>
+                        <div className="text-xs text-gray-500">{visitor.name}</div>
+                      </td>
+                      <td className="p-3 text-sm text-gray-700">{visitor.resident}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          visitor.verifiedBy === 'QR Scan' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {visitor.verifiedBy || 'Manual Entry'}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                          Active
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleCheckout(visitor.id)}
+                          className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                        >
+                          Check Out
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Recent Security Incidents */}
+            <div className="mt-8">
+              <h4 className="font-semibold text-gray-900 mb-4">Recent Security Incidents</h4>
+              <div className="space-y-3">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h5 className="font-medium text-red-900">Blacklisted Visitor Attempt</h5>
+                      <p className="text-sm text-red-700 mt-1">Code: BLOCK123 • Time: 10:30 AM</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded">
+                      Blocked
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h5 className="font-medium text-yellow-900">Late Night Entry</h5>
+                      <p className="text-sm text-yellow-700 mt-1">Visitor XYZ789 • Time: 11:45 PM</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
+                      Warning Issued
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
