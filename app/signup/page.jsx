@@ -17,7 +17,7 @@ const MOCK_INVITATIONS = {
     token: 'invite_1_token',
     sentAt: '2024-01-15T10:30:00Z',
     status: 'sent',
-    expiresAt: '2026-01-22T10:30:00Z',
+    expiresAt: '2024-01-22T10:30:00Z',
     isValid: true
   },
   'invite_2_token': {
@@ -74,7 +74,21 @@ const MOCK_ESTATES = {
   }
 }
 
-export default function ResidentSignupPage() {
+// Loading component
+function SignupLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-700 mx-auto mb-4"></div>
+        <p className="text-gray-700 text-lg">Loading invitation...</p>
+        <p className="text-gray-600 text-sm mt-2">Please wait a moment</p>
+      </div>
+    </div>
+  )
+}
+
+// Main component that uses useSearchParams
+function SignupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -284,15 +298,7 @@ export default function ResidentSignupPage() {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-700 mx-auto mb-4"></div>
-          <p className="text-gray-700 text-lg">Verifying your invitation...</p>
-          <p className="text-gray-600 text-sm mt-2">Please wait a moment</p>
-        </div>
-      </div>
-    )
+    return <SignupLoading />
   }
 
   // Invalid token state
@@ -356,8 +362,6 @@ export default function ResidentSignupPage() {
   }
 
   return (
-    <Suspense>
-
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
       <header className="bg-white shadow-sm">
@@ -862,6 +866,14 @@ export default function ResidentSignupPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+// Main export with Suspense wrapper
+export default function ResidentSignupPage() {
+  return (
+    <Suspense fallback={<SignupLoading />}>
+      <SignupContent />
     </Suspense>
   )
 }
