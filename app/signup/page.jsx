@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 // Mock invitation data for demonstration
@@ -356,6 +356,8 @@ export default function ResidentSignupPage() {
   }
 
   return (
+    <Suspense>
+
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
       <header className="bg-white shadow-sm">
@@ -860,5 +862,6 @@ export default function ResidentSignupPage() {
         </div>
       </footer>
     </div>
+    </Suspense>
   )
 }
