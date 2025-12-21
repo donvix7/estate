@@ -161,7 +161,20 @@ const STAFF_DATA = {
     department: 'Housekeeping',
     employeeId: 'STF-00123',
     joinDate: '2023-03-15',
-    contact: '+91 9876543210'
+    contact: '+91 9876543210',
+    email: 'john.cleaner@sunrisetowers.com',
+    address: 'Staff Quarters, Block C, Sunrise Towers',
+    emergencyContact: '+91 9876543211',
+    bloodGroup: 'O+',
+    skills: ['Cleaning', 'Sanitization', 'Equipment Handling'],
+    certifications: ['Basic Housekeeping', 'Safety Training'],
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    performance: {
+      rating: 4.5,
+      completedTasks: 156,
+      attendance: 98.5,
+      lastReview: '2024-01-10'
+    }
   }
 }
 
@@ -242,12 +255,18 @@ const mockAPI = {
       STAFF_DATA.inventory[itemIndex].quantity = quantity;
     }
     return { success: true };
+  },
+
+  // Update profile
+  async updateProfile(profileData) {
+    STAFF_DATA.staffData = { ...STAFF_DATA.staffData, ...profileData };
+    return { success: true, data: STAFF_DATA.staffData };
   }
 };
 
 export default function StaffDashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('tasks')
+  const [activeTab, setActiveTab] = useState('overview')
   const [announcements, setAnnouncements] = useState([])
   const [tasks, setTasks] = useState([])
   const [workLogs, setWorkLogs] = useState([])
@@ -278,6 +297,34 @@ export default function StaffDashboard() {
     action: 'use' // 'use' or 'add'
   })
 
+  // Edit Profile State
+  const [isEditing, setIsEditing] = useState(false)
+  const [originalProfileData, setOriginalProfileData] = useState({})
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Profile State
+  const [profileData, setProfileData] = useState({
+    name: '',
+    contact: '',
+    email: '',
+    address: '',
+    emergencyContact: '',
+    bloodGroup: '',
+    skills: '',
+    certifications: ''
+  })
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Cancel editing - reset to original data
+      setProfileData(originalProfileData)
+    } else {
+      // Start editing - save current data as original
+      setOriginalProfileData(profileData)
+    }
+    setIsEditing(!isEditing)
+  }
+
   // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
@@ -295,6 +342,16 @@ export default function StaffDashboard() {
         setWorkLogs(workLogsData)
         setInventory(inventoryData)
         setStaffData(staffData)
+        setProfileData({
+          name: staffData.name,
+          contact: staffData.contact,
+          email: staffData.email,
+          address: staffData.address,
+          emergencyContact: staffData.emergencyContact,
+          bloodGroup: staffData.bloodGroup,
+          skills: staffData.skills.join(', '),
+          certifications: staffData.certifications.join(', ')
+        })
       } catch (error) {
         console.error('Error loading staff data:', error)
         // Fallback to hardcoded data
@@ -303,6 +360,16 @@ export default function StaffDashboard() {
         setWorkLogs(STAFF_DATA.workLogs)
         setInventory(STAFF_DATA.inventory)
         setStaffData(STAFF_DATA.staffData)
+        setProfileData({
+          name: STAFF_DATA.staffData.name,
+          contact: STAFF_DATA.staffData.contact,
+          email: STAFF_DATA.staffData.email,
+          address: STAFF_DATA.staffData.address,
+          emergencyContact: STAFF_DATA.staffData.emergencyContact,
+          bloodGroup: STAFF_DATA.staffData.bloodGroup,
+          skills: STAFF_DATA.staffData.skills.join(', '),
+          certifications: STAFF_DATA.staffData.certifications.join(', ')
+        })
       } finally {
         setIsLoading(false)
       }
@@ -401,6 +468,32 @@ export default function StaffDashboard() {
     }
   }
 
+  // Profile Functions
+  const handleProfileUpdate = async () => {
+    try {
+      const result = await mockAPI.updateProfile({
+        ...profileData,
+        skills: profileData.skills.split(',').map(skill => skill.trim()),
+        certifications: profileData.certifications.split(',').map(cert => cert.trim())
+      })
+      
+      if (result.success) {
+        setStaffData(result.data)
+        alert('Profile updated successfully!')
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Error updating profile')
+    }
+  }
+
+  const handleProfileFieldChange = (field, value) => {
+    setProfileData({
+      ...profileData,
+      [field]: value
+    })
+  }
+
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -488,6 +581,15 @@ export default function StaffDashboard() {
     return inventory.filter(item => item.quantity <= item.threshold)
   }
 
+  const calculateExperience = () => {
+    if (!staffData?.joinDate) return '0 years'
+    const joinDate = new Date(staffData.joinDate)
+    const today = new Date()
+    const years = today.getFullYear() - joinDate.getFullYear()
+    const months = today.getMonth() - joinDate.getMonth()
+    return months < 0 ? `${years-1} years ${12+months} months` : `${years} years ${months} months`
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
@@ -502,23 +604,31 @@ export default function StaffDashboard() {
   const taskStats = getTaskStats()
   const todayHours = getTodayHours()
   const lowStockItems = getLowStockItems()
+  const experience = calculateExperience()
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
-      <header className="bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg">
+      <header className="bg-gradient-to-r from-blue-800 to-blue-900 text-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold">Staff Dashboard</h1>
-              <p className="text-green-200">
+              <p className="text-blue-200">
                 {staffData?.estate} | Welcome, {staffData?.name}
               </p>
-              <p className="text-green-300 text-sm mt-1">
+              <p className="text-blue-300 text-sm mt-1">
                 {staffData?.department} • ID: {staffData?.employeeId}
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setActiveTab('profile')}
+                className="flex items-center space-x-2 px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium"
+              >
+                <span>👤</span>
+                <span>Profile</span>
+              </button>
               <div className="relative">
                 <button 
                   onClick={() => setActiveTab('announcements')}
@@ -549,104 +659,37 @@ export default function StaffDashboard() {
         <div className="flex border-b mb-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 font-medium ${activeTab === 'overview' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-700 hover:text-gray-900'}`}
+            className={`px-6 py-3 font-medium ${activeTab === 'overview' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
           >
             Overview
           </button>
-          <button
-            onClick={() => setActiveTab('tasks')}
-            className={`px-6 py-3 font-medium relative ${activeTab === 'tasks' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-700 hover:text-gray-900'}`}
-          >
-            Tasks
-            {taskStats.pending > 0 && (
-              <span className="absolute -top-1 right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {taskStats.pending}
-              </span>
-            )}
-          </button>
+          
           <button
             onClick={() => setActiveTab('worklog')}
-            className={`px-6 py-3 font-medium ${activeTab === 'worklog' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-700 hover:text-gray-900'}`}
+            className={`px-6 py-3 font-medium ${activeTab === 'worklog' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
           >
             Work Log
           </button>
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`px-6 py-3 font-medium relative ${activeTab === 'inventory' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-700 hover:text-gray-900'}`}
-          >
-            Inventory
-            {lowStockItems.length > 0 && (
-              <span className="absolute -top-1 right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {lowStockItems.length}
-              </span>
-            )}
-          </button>
+          
           <button
             onClick={() => setActiveTab('announcements')}
-            className={`px-6 py-3 font-medium ${activeTab === 'announcements' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-700 hover:text-gray-900'}`}
+            className={`px-6 py-3 font-medium ${activeTab === 'announcements' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
           >
             Announcements
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`px-6 py-3 font-medium ${activeTab === 'profile' ? 'border-b-2 border-blue-700 text-blue-700' : 'text-gray-700 hover:text-gray-900'}`}
+          >
+            Profile
           </button>
         </div>
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-md p-6 border border-green-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Today's Tasks</h3>
-                    <p className="text-3xl font-bold text-green-700">{taskStats.total}</p>
-                    <p className="text-sm text-gray-600 mt-1">{taskStats.completed} completed</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 text-xl">📋</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-blue-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Today's Hours</h3>
-                    <p className="text-3xl font-bold text-blue-700">{todayHours}h</p>
-                    <p className="text-sm text-gray-600 mt-1">Work logged today</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 text-xl">⏱️</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-amber-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Completion Rate</h3>
-                    <p className="text-3xl font-bold text-amber-600">{taskStats.completionRate}%</p>
-                    <p className="text-sm text-gray-600 mt-1">Tasks completed</p>
-                  </div>
-                  <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <span className="text-amber-600 text-xl">📈</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-red-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Low Stock Items</h3>
-                    <p className="text-3xl font-bold text-red-600">{lowStockItems.length}</p>
-                    <p className="text-sm text-gray-600 mt-1">Needs restocking</p>
-                  </div>
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <span className="text-red-600 text-xl">⚠️</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            
             {/* Recent Tasks */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
@@ -733,260 +776,8 @@ export default function StaffDashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-green-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={() => setActiveTab('worklog')}
-                  className="p-4 bg-white border border-green-100 rounded-lg hover:bg-green-50 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <span className="text-green-600">📝</span>
-                  </div>
-                  <h5 className="font-medium text-gray-900">Log Work Hours</h5>
-                  <p className="text-sm text-gray-600 mt-1">Submit daily work log</p>
-                </button>
-                <button
-                  onClick={() => setActiveTab('tasks')}
-                  className="p-4 bg-white border border-blue-100 rounded-lg hover:bg-blue-50 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                    <span className="text-blue-600">➕</span>
-                  </div>
-                  <h5 className="font-medium text-gray-900">Add New Task</h5>
-                  <p className="text-sm text-gray-600 mt-1">Create personal task</p>
-                </button>
-                <button
-                  onClick={() => setActiveTab('inventory')}
-                  className="p-4 bg-white border border-amber-100 rounded-lg hover:bg-amber-50 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mb-3">
-                    <span className="text-amber-600">📦</span>
-                  </div>
-                  <h5 className="font-medium text-gray-900">Check Inventory</h5>
-                  <p className="text-sm text-gray-600 mt-1">View stock levels</p>
-                </button>
-              </div>
-            </div>
           </div>
         )}
-
-        {/* Tasks Tab */}
-        {activeTab === 'tasks' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Task List */}
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">My Tasks</h3>
-                  <div className="flex items-center space-x-2">
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                      {taskStats.completed} Completed
-                    </span>
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
-                      {taskStats.pending} Pending
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  {tasks.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl">📋</span>
-                      </div>
-                      <p className="text-gray-700 text-lg">No tasks assigned</p>
-                    </div>
-                  ) : (
-                    tasks.map(task => (
-                      <div key={task.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-bold text-gray-900">{task.title}</h4>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-xs text-gray-700">
-                                Location: {task.location}
-                              </span>
-                              <span className="text-xs text-gray-700">
-                                Due: {new Date(task.dueDate).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                              {task.priority}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                              {getStatusText(task.status)}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">{task.description}</p>
-                        <div className="flex justify-between items-center">
-                          <div className="flex-1">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  task.status === 'completed' ? 'bg-green-600' :
-                                  task.status === 'in_progress' ? 'bg-blue-600' : 'bg-yellow-600'
-                                }`}
-                                style={{ width: `${task.progress}%` }}
-                              ></div>
-                            </div>
-                            <p className="text-xs text-gray-600 mt-1">
-                              {task.progress}% complete • Assigned to: {task.assignedTo}
-                            </p>
-                          </div>
-                          <div className="flex space-x-2 ml-4">
-                            <button
-                              onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}
-                              disabled={task.status === 'in_progress'}
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
-                            >
-                              Start
-                            </button>
-                            <button
-                              onClick={() => handleUpdateTaskStatus(task.id, 'completed')}
-                              disabled={task.status === 'completed'}
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50"
-                            >
-                              Complete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Add Task & Stats */}
-              <div className="space-y-6">
-                {/* Add Task Form */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Add New Task</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Task Title *</label>
-                      <input
-                        type="text"
-                        value={newTask.title}
-                        onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50"
-                        placeholder="Enter task title"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Description</label>
-                      <textarea
-                        value={newTask.description}
-                        onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50"
-                        rows="3"
-                        placeholder="Enter task description"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-800">Priority</label>
-                        <select
-                          value={newTask.priority}
-                          onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50"
-                        >
-                          <option value="low">Low Priority</option>
-                          <option value="medium">Medium Priority</option>
-                          <option value="high">High Priority</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-800">Due Date</label>
-                        <input
-                          type="date"
-                          value={newTask.dueDate}
-                          onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Location</label>
-                      <input
-                        type="text"
-                        value={newTask.location}
-                        onChange={(e) => setNewTask({...newTask, location: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50"
-                        placeholder="e.g., Block A, Ground Floor"
-                      />
-                    </div>
-                    
-                    <button
-                      onClick={handleAddTask}
-                      disabled={!newTask.title.trim()}
-                      className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      Add Task
-                    </button>
-                  </div>
-                </div>
-
-                {/* Task Statistics */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Task Statistics</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Completion Rate</span>
-                        <span className="text-sm font-bold text-green-700">{taskStats.completionRate}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-green-600 h-3 rounded-full" 
-                          style={{ width: `${taskStats.completionRate}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                          <span className="text-sm text-gray-700">Completed</span>
-                        </div>
-                        <span className="font-bold text-green-700">{taskStats.completed}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                          <span className="text-sm text-gray-700">In Progress</span>
-                        </div>
-                        <span className="font-bold text-blue-700">{taskStats.inProgress}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                          <span className="text-sm text-gray-700">Pending</span>
-                        </div>
-                        <span className="font-bold text-yellow-700">{taskStats.pending}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Work Log Tab */}
         {activeTab === 'worklog' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1114,207 +905,6 @@ export default function StaffDashboard() {
           </div>
         )}
 
-        {/* Inventory Tab */}
-        {activeTab === 'inventory' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Inventory List */}
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">Inventory Items</h3>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                    {inventory.length} Items
-                  </span>
-                </div>
-                
-                {inventory.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">📦</span>
-                    </div>
-                    <p className="text-gray-700 text-lg">No inventory items</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {inventory.map(item => (
-                      <div key={item.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-bold text-gray-900">{item.item}</h4>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
-                                {item.category}
-                              </span>
-                              <span className="text-xs text-gray-700">
-                                Location: {item.location}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className={`text-lg font-bold ${
-                              item.quantity <= item.threshold ? 'text-red-600' : 'text-green-600'
-                            }`}>
-                              {item.quantity} {item.unit}
-                            </div>
-                            <span className="text-xs text-gray-500">
-                              Threshold: {item.threshold}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex-1">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  item.quantity <= item.threshold ? 'bg-red-600' :
-                                  item.quantity <= item.threshold * 2 ? 'bg-yellow-600' : 'bg-green-600'
-                                }`}
-                                style={{ width: `${Math.min(100, (item.quantity / (item.threshold * 3)) * 100)}%` }}
-                              ></div>
-                            </div>
-                            <p className="text-xs text-gray-600 mt-1">
-                              {item.quantity <= item.threshold ? '⚠️ Low Stock' : '✓ In Stock'}
-                            </p>
-                          </div>
-                          <div className="flex space-x-2 ml-4">
-                            <button
-                              onClick={() => handleUpdateInventory(item.id, 'use')}
-                              disabled={item.quantity <= 0}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm disabled:opacity-50"
-                            >
-                              Use
-                            </button>
-                            <button
-                              onClick={() => handleUpdateInventory(item.id, 'add')}
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                            >
-                              Add
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Inventory Stats & Low Stock */}
-              <div className="space-y-6">
-                {/* Low Stock Alert */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-red-200">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-red-900">Low Stock Alert</h3>
-                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                      {lowStockItems.length} Items
-                    </span>
-                  </div>
-                  
-                  {lowStockItems.length === 0 ? (
-                    <div className="text-center py-4">
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <span className="text-green-600 text-xl">✓</span>
-                      </div>
-                      <p className="text-green-700 font-medium">All items are sufficiently stocked</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {lowStockItems.map(item => (
-                        <div key={item.id} className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="font-medium text-red-900">{item.item}</h4>
-                              <p className="text-sm text-red-700 mt-1">
-                                Current: {item.quantity} {item.unit} | Threshold: {item.threshold}
-                              </p>
-                            </div>
-                            <span className="text-lg font-bold text-red-600">
-                              ⚠️
-                            </span>
-                          </div>
-                          <p className="text-xs text-red-600 mt-2">Location: {item.location}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Inventory Statistics */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Inventory Statistics</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Stock Health</span>
-                        <span className={`text-sm font-bold ${
-                          lowStockItems.length > 0 ? 'text-red-700' : 'text-green-700'
-                        }`}>
-                          {lowStockItems.length > 0 ? 'Needs Attention' : 'Healthy'}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className={`h-3 rounded-full ${
-                            lowStockItems.length > 0 ? 'bg-red-600' : 'bg-green-600'
-                          }`}
-                          style={{ width: `${100 - (lowStockItems.length / inventory.length * 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-800">Total Items</p>
-                        <p className="text-2xl font-bold text-blue-700">{inventory.length}</p>
-                      </div>
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm text-green-800">In Stock</p>
-                        <p className="text-2xl font-bold text-green-700">
-                          {inventory.filter(i => i.quantity > i.threshold).length}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6">
-                  <h4 className="font-semibold text-green-900 mb-4">Quick Actions</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => {
-                        // Report low stock to manager
-                        alert('Low stock report sent to manager!');
-                      }}
-                      className="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200 font-medium"
-                    >
-                      Report Low Stock
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Request new items
-                        prompt('Enter items to request:');
-                      }}
-                      className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 font-medium"
-                    >
-                      Request Items
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Print inventory report
-                        alert('Inventory report generated!');
-                      }}
-                      className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 font-medium"
-                    >
-                      Print Report
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Announcements Tab */}
         {activeTab === 'announcements' && (
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
@@ -1399,6 +989,215 @@ export default function StaffDashboard() {
                     <li>• Check inventory levels before starting tasks</li>
                     <li>• Contact emergency number (911) for urgent situations</li>
                   </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && staffData && (
+          <div className="space-y-6">
+            {/* Profile Header with Edit Button */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+                <div className="relative">
+                  <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center overflow-hidden border-4 border-white">
+                    {staffData.avatar ? (
+                      <img 
+                        src={staffData.avatar} 
+                        alt={staffData.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-5xl text-blue-600">👤</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h2 className="text-3xl font-bold">{staffData.name}</h2>
+                      <p className="text-blue-200 mt-2">{staffData.department}</p>
+                    </div>
+                    <button
+                      onClick={handleEditToggle}
+                      className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center ${
+                        isEditing 
+                          ? 'bg-yellow-500 hover:bg-yellow-600' 
+                          : 'bg-white/20 hover:bg-white/30'
+                      }`}
+                    >
+                      {isEditing ? (
+                        <>
+                          <span className="mr-2">✕</span>
+                          Cancel
+                        </>
+                      ) : (
+                        <>
+                          <span className="mr-2">✏️</span>
+                          Edit Profile
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+                      Employee ID: {staffData.employeeId}
+                    </span>
+                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+                      Experience: {experience}
+                    </span>
+                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+                      Joined: {new Date(staffData.joinDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Editable Profile Form */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Personal Information */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                      <span className="mr-2">📝</span> Personal Information
+                    </h3>
+                    {!isEditing && (
+                      <span className="text-sm text-gray-500">Click "Edit Profile" to make changes</span>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Full Name *</label>
+                      <input
+                        type="text"
+                        value={profileData.name}
+                        onChange={(e) => handleProfileFieldChange('name', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                          isEditing 
+                            ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white' 
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        }`}
+                        disabled={!isEditing}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Contact Number *</label>
+                      <input
+                        type="tel"
+                        value={profileData.contact}
+                        onChange={(e) => handleProfileFieldChange('contact', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                          isEditing 
+                            ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white' 
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        }`}
+                        disabled={!isEditing}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Email Address *</label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => handleProfileFieldChange('email', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                          isEditing 
+                            ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white' 
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        }`}
+                        disabled={!isEditing}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Emergency Contact</label>
+                      <input
+                        type="tel"
+                        value={profileData.emergencyContact}
+                        onChange={(e) => handleProfileFieldChange('emergencyContact', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                          isEditing 
+                            ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white' 
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        }`}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Blood Group</label>
+                      <input
+                        type="text"
+                        value={profileData.bloodGroup}
+                        onChange={(e) => handleProfileFieldChange('bloodGroup', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                          isEditing 
+                            ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white' 
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        }`}
+                        disabled={!isEditing}
+                        placeholder="e.g., O+, A-, B+"
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Address</label>
+                      <textarea
+                        value={profileData.address}
+                        onChange={(e) => handleProfileFieldChange('address', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                          isEditing 
+                            ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white' 
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        }`}
+                        rows="3"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skills & Certifications */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    <span className="mr-2">🎯</span> Professional Details
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Skills (comma separated)</label>
+                      <textarea
+                        value={profileData.skills}
+                        onChange={(e) => handleProfileFieldChange('skills', e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        rows="2"
+                        placeholder="e.g., Cleaning, Sanitization, Equipment Handling"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Certifications (comma separated)</label>
+                      <textarea
+                        value={profileData.certifications}
+                        onChange={(e) => handleProfileFieldChange('certifications', e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        rows="2"
+                        placeholder="e.g., Basic Housekeeping, Safety Training"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -9,18 +9,13 @@ import { PaymentSystem } from '@/components/payment-system'
 // Hardcoded database simulation
 const HARDCODED_DATA = {
   announcements: [
-    { id: 1, title: 'Water Supply Maintenance', content: 'Water supply will be interrupted on Jan 20, 10 AM - 4 PM', date: '2024-01-18', type: 'maintenance', read: false },
-    { id: 2, title: 'Security Update', content: 'New security protocols effective from Feb 1', date: '2024-01-17', type: 'security', read: true },
-    { id: 3, title: 'Community Event', content: 'Annual community dinner on Jan 25 at Club House', date: '2024-01-16', type: 'event', read: true }
-  ],
+    /*{ id: 1, title: 'Water Supply Maintenance', content: 'Water supply will be interrupted on Jan 20, 10 AM - 4 PM', date: '2024-01-18', type: 'maintenance', read: false },
+   */],
   visitors: [
-    { id: 1, name: 'John Delivery', purpose: 'Delivery', time: 'Today, 10:30 AM', status: 'Active' },
-    { id: 2, name: 'Electrician', purpose: 'Service', time: 'Today, 2:00 PM', status: 'Pending' },
-    { id: 3, name: 'Sarah Guest', purpose: 'Personal', time: 'Yesterday, 7:00 PM', status: 'Completed' },
-    { id: 4, name: 'Amazon Delivery', purpose: 'Delivery', time: 'Jan 15, 11:30 AM', status: 'Completed' }
-  ],
+    /*{ id: 1, name: 'John Delivery', purpose: 'Delivery', time: 'Today, 10:30 AM', status: 'Active' },
+    */],
   residents: [
-    {
+   /* {
       id: 1,
       name: 'John Resident',
       email: 'resident@demo.com',
@@ -31,7 +26,7 @@ const HARDCODED_DATA = {
       emergencyContact: '+91 9876543211',
       familyMembers: 3,
       vehicleNumber: 'MH01AB1234'
-    }
+    }*/
   ]
 }
 
@@ -41,7 +36,7 @@ const mockAPI = {
   async getAnnouncements() {
     try {
       // Try to fetch from placeholder API
-      const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=3');
+      const response = await fetch('https://');
       const data = await response.json();
       
       return data.map((post, index) => ({
@@ -193,7 +188,7 @@ export default function ResidentDashboard() {
       // Clear session storage
       sessionStorage.removeItem('currentUser');
       sessionStorage.removeItem('sessionId');
-      router.push('/register');
+      router.push('/login');
     }
   }
 
@@ -367,53 +362,13 @@ export default function ResidentDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Emergency Panic System</h2>
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                  🚨 24/7 Active
+                   24/7 Active
                 </span>
               </div>
               <PanicButton />
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-md p-6 border border-blue-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Active Visitors</h3>
-                    <p className="text-3xl font-bold text-blue-700">{getActiveVisitors()}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 text-xl">👥</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-amber-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Current Due</h3>
-                    <p className="text-3xl font-bold text-amber-600">₹5,000</p>
-                    <p className="text-sm text-gray-600 mt-1">Due: 15th Jan</p>
-                  </div>
-                  <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <span className="text-amber-600 text-xl">💰</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-green-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Announcements</h3>
-                    <p className="text-3xl font-bold text-green-600">{announcements.length}</p>
-                    <p className="text-sm text-gray-600 mt-1">{getUnreadCount()} unread</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 text-xl">📢</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            
             {/* Recent Visitors */}
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
               <div className="flex justify-between items-center mb-6">
@@ -636,13 +591,13 @@ export default function ResidentDashboard() {
 
             {saveStatus === 'success' && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-700 font-medium">✅ Profile updated successfully!</p>
+                <p className="text-green-700 font-medium"> Profile updated successfully!</p>
               </div>
             )}
 
             {saveStatus === 'error' && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-700 font-medium">❌ Error updating profile. Please try again.</p>
+                <p className="text-red-700 font-medium">Error updating profile. Please try again.</p>
               </div>
             )}
 

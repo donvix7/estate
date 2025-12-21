@@ -41,7 +41,7 @@ export function PanicButton() {
       timer = setTimeout(() => setCountdown(countdown - 1), 1000)
     } else if (countdown === 0 && isPanicking) {
       // Auto-trigger without PIN after countdown
-      alert('🚨 PANIC ALERT SENT! Security and Admin notified!')
+      alert(' PANIC ALERT SENT! Security and Admin notified!')
       setIsPanicking(false)
       setCountdown(5)
     }

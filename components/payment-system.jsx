@@ -6,10 +6,7 @@ export function PaymentSystem() {
   const [paymentAmount, setPaymentAmount] = useState(5000)
   const [isProcessing, setIsProcessing] = useState(false)
   const [transactions, setTransactions] = useState([
-    { id: 1, date: '2024-01-15', amount: 5000, status: 'Paid', type: 'Maintenance' },
-    { id: 2, date: '2023-12-15', amount: 5000, status: 'Paid', type: 'Maintenance' },
-    { id: 3, date: '2023-11-15', amount: 5000, status: 'Overdue', type: 'Maintenance' }
-  ])
+    ])
   const [showReceipt, setShowReceipt] = useState(false)
 
   const handlePayment = () => {
@@ -29,7 +26,7 @@ export function PaymentSystem() {
       setIsProcessing(false)
       setShowReceipt(true)
       
-      alert('✅ Payment successful! Digital receipt generated.')
+      alert(' Payment successful! Digital receipt generated.')
     }, 2000)
   }
 

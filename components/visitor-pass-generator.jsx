@@ -5,11 +5,8 @@ import { useState, useEffect, useRef } from 'react'
 // Hardcoded database simulation
 const HARDCODED_DATA = {
   passHistory: [],
-  blacklist: [
-    { name: 'Robert Suspicious', phone: '9870012345', reason: 'Security Violation' },
-    { name: 'Jane Unauthorized', phone: '9870012346', reason: 'Previous Misconduct' }
-  ],
-  entryExitLogs: []
+  entryExitLogs: [],
+  blacklist: []
 }
 
 // Mock API functions
@@ -38,11 +35,6 @@ const mockAPI = {
       console.log('Using hardcoded pass history');
       return HARDCODED_DATA.passHistory;
     }
-  },
-
-  // Get blacklist
-  async getBlacklist() {
-    return HARDCODED_DATA.blacklist;
   },
 
   // Get entry/exit logs
@@ -87,7 +79,12 @@ const mockAPI = {
   async logEntryExit(log) {
     HARDCODED_DATA.entryExitLogs.unshift(log);
     return { success: true, id: log.id };
-  }
+  },
+
+  async getBlacklist() {
+    HARDCODED_DATA.blacklist;
+    return { success: true };
+  },
 };
 
 export function VisitorPassGenerator() {
@@ -164,24 +161,10 @@ export function VisitorPassGenerator() {
       [name]: value
     }))
 
-    // Check if visitor is blacklisted
-    if ((name === 'visitorName' || name === 'phone') && value) {
-      checkBlacklist(value, name === 'visitorName' ? 'name' : 'phone')
-    }
+
   }
 
-  // Check if visitor is blacklisted
-  const checkBlacklist = (value, field) => {
-    const isBlacklisted = blacklistedVisitors.some(visitor => 
-      field === 'name' 
-        ? visitor.name.toLowerCase().includes(value.toLowerCase())
-        : visitor.phone.includes(value)
-    )
-    
-    if (isBlacklisted) {
-      alert('⚠️ WARNING: This visitor is on the blacklist!')
-    }
-  }
+  
 
   // Generate QR code data URL
   const generateQRCode = (passData) => {
@@ -688,97 +671,13 @@ Valid until: ${new Date(generatedPass.expectedDeparture).toLocaleString()}`
                 </div>
               )}
 
-              {/* Blacklist Section */}
-              <div className="bg-red-50 border border-red-300 rounded-xl p-4">
-                <h4 className="font-bold text-red-900 mb-3">Blacklisted Visitors</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {blacklistedVisitors.length === 0 ? (
-                    <p className="text-gray-700 text-sm">No blacklisted visitors</p>
-                  ) : (
-                    blacklistedVisitors.map((visitor, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-white rounded-lg border">
-                        <div>
-                          <p className="font-medium text-sm text-gray-900">{visitor.name}</p>
-                          <p className="text-xs text-gray-700 mt-1">{visitor.reason}</p>
-                        </div>
-                        <button
-                          onClick={() => removeFromBlacklist(index)}
-                          className="text-xs bg-red-100 text-red-800 px-3 py-1.5 rounded hover:bg-red-200 font-medium"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              
 
-              {/* Recent History */}
-              {passHistory.length > 0 && (
-                <div className="bg-gray-50 border border-gray-300 rounded-xl p-4">
-                  <h4 className="font-bold text-gray-900 mb-3">Recent Passes</h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {passHistory.slice(0, 5).map((pass, index) => (
-                      <div 
-                        key={index}
-                        onClick={() => loadFromHistory(pass)}
-                        className="p-3 bg-white rounded-lg border cursor-pointer hover:bg-blue-50 transition-colors"
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium text-sm text-gray-900">{pass.visitorName}</span>
-                          <span className="text-xs font-mono bg-gray-100 text-gray-900 px-2 py-1 rounded border">
-                            {pass.passCode}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-700 mt-1">
-                          {new Date(pass.timestamp).toLocaleDateString()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              
             </div>
           </div>
 
-          {/* Entry/Exit Logs Preview */}
-          <div className="mt-8 bg-white border border-gray-300 rounded-xl p-6">
-            <h4 className="font-bold text-gray-900 mb-3">Recent Entry/Exit Logs</h4>
-            <div className="space-y-3">
-              {entryExitLogs.slice(0, 3).map((log, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border-b border-gray-200">
-                  <div>
-                    <span className="font-medium text-gray-900">{log.visitor}</span>
-                    <span className={`ml-2 text-xs px-3 py-1.5 rounded-full font-medium ${
-                      log.type === 'entry' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {log.type.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-700 font-medium">
-                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              ))}
-              {entryExitLogs.length === 0 && (
-                <div className="text-center py-4">
-                  <p className="text-gray-700">No entry/exit logs yet</p>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                if (entryExitLogs.length > 0) {
-                  alert(`Total logs: ${entryExitLogs.length}\nLast entry: ${entryExitLogs[0]?.visitor} at ${new Date(entryExitLogs[0]?.timestamp).toLocaleString()}`)
-                } else {
-                  alert('No logs available')
-                }
-              }}
-              className="w-full mt-4 py-2.5 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 font-medium"
-            >
-              View All Logs
-            </button>
-          </div>
+          
         </div>
       </div>
     </div>

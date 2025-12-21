@@ -42,6 +42,9 @@ export default function HomePage() {
               </div>
               <h1 className="text-xl font-bold text-gray-900">EstateSecure</h1>
             </div>
+            <a href="/documentation" className="text-gray-700 hover:text-blue-700 font-medium">
+              documentation
+            </a>
             <button
               onClick={() => router.push('/register')}
               className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-all"

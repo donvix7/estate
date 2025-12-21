@@ -2,284 +2,51 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Scanner } from '@yudiel/react-qr-scanner'
+import dynamic from 'next/dynamic'
 
+// Dynamically import the QR scanner to avoid SSR issues
+const Scanner = dynamic(
+  () => import('@yudiel/react-qr-scanner').then(mod => mod.Scanner),
+  { 
+    ssr: false,
+    loading: () => <div className="h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto"></div>
+        <p className="mt-2 text-gray-600">Loading scanner...</p>
+      </div>
+    </div>
+  }
+)
 
 // Hardcoded database simulation
 const HARDCODED_DATA = {
-  announcements: [
-    {
-      id: 1,
-      title: 'Security Patrol Update',
-      message: 'Night patrol timings changed to 10 PM - 6 AM',
-      type: 'security',
-      priority: 'normal',
-      author: 'Security Chief',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      read: false
-    },
-    {
-      id: 2,
-      title: 'Emergency Drill Today',
-      message: 'Fire safety drill at 4 PM in Block B',
-      type: 'emergency',
-      priority: 'high',
-      author: 'Admin',
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      read: true
-    },
-    {
-      id: 3,
-      title: 'CCTV Maintenance',
-      message: 'Camera maintenance in Parking Area from 2-4 PM',
-      type: 'maintenance',
-      priority: 'normal',
-      author: 'Security',
-      timestamp: new Date(Date.now() - 86400000).toISOString(),
-      read: true
-    }
-  ],
+  announcements: [],
   broadcasts: [],
   securityIncidents: [],
   emergencyAlerts: [],
-  currentVisitors: [
-    { 
-      id: 1, 
-      name: 'John Delivery', 
-      code: 'ABC123', 
-      resident: 'A-101', 
-      purpose: 'Delivery', 
-      entry: '10:30 AM',
-      verifiedBy: 'Manual Entry',
-      scanTime: new Date(Date.now() - 7200000).toISOString()
-    },
-    { 
-      id: 2, 
-      name: 'Electrician', 
-      code: 'XYZ789', 
-      resident: 'B-202', 
-      purpose: 'Service', 
-      entry: '2:00 PM',
-      verifiedBy: 'Manual Entry',
-      scanTime: new Date(Date.now() - 3600000).toISOString()
-    }
-  ],
-  securityLogs: [
-    {
-      id: 1,
-      type: 'visitor_verified',
-      visitorCode: 'ABC123',
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      action: 'Entry granted manually',
-      securityPersonnel: 'John Admin',
-      location: 'Main Gate',
-      notes: 'Manual verification'
-    },
-    {
-      id: 2,
-      type: 'visitor_verified',
-      visitorCode: 'XYZ789',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      action: 'Entry granted manually',
-      securityPersonnel: 'John Admin',
-      location: 'Main Gate',
-      notes: 'Manual verification'
-    }
-  ],
+  currentVisitors: [],
+  securityLogs: [],
   userData: {
-    id: 'admin_001',
+    /*id: 'admin_001',
     name: 'John Admin',
     gateStation: 'Main Office',
     type: 'admin',
-    estateId: 'estate_001'
+    estateId: 'estate_001'*/
   },
-  estates: [
-    {
-      id: 'estate_001',
-      name: 'Sunrise Towers',
-      adminId: 'admin_001',
-      address: '123 Main Street, City',
-      units: ['A-101', 'A-102', 'B-201', 'B-202', 'C-301', 'C-302']
-    },
-    {
-      id: 'estate_002',
-      name: 'Lakeview Apartments',
-      adminId: 'admin_002',
-      address: '456 Park Avenue, City',
-      units: ['101', '102', '201', '202', '301', '302']
-    }
-  ],
-  pendingInvites: [
-    {
-      id: 'invite_1',
-      name: 'Test Resident',
-      email: 'test@example.com',
-      unitNumber: 'A-101',
-      phone: '+91 9876543210',
-      role: 'resident',
-      estateId: 'estate_001',
-      token: 'invite_1_token',
-      sentAt: new Date(Date.now() - 86400000).toISOString(),
-      status: 'sent',
-      expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  ],
-  staffMembers: [
-    {
-      id: 'staff_001',
-      name: 'John Cleaner',
-      email: 'john.cleaner@estate.com',
-      phone: '+91 9876543201',
-      role: 'cleaning_staff',
-      department: 'Housekeeping',
-      employeeId: 'STF-00123',
-      estateId: 'estate_001',
-      joinDate: '2023-03-15',
-      status: 'active',
-      salary: 18000,
-      workSchedule: 'Mon-Fri, 9AM-6PM',
-      emergencyContact: '+91 9876543202',
-      address: 'Staff Quarters, Block D',
-      skills: ['Cleaning', 'Waste Management', 'Sanitization'],
-      notes: 'Dedicated staff, good performance'
-    },
-    {
-      id: 'staff_002',
-      name: 'Mike Gardener',
-      email: 'mike.gardener@estate.com',
-      phone: '+91 9876543203',
-      role: 'gardener',
-      department: 'Gardening',
-      employeeId: 'STF-00124',
-      estateId: 'estate_001',
-      joinDate: '2023-04-10',
-      status: 'active',
-      salary: 15000,
-      workSchedule: 'Mon-Sat, 7AM-4PM',
-      emergencyContact: '+91 9876543204',
-      address: 'Staff Quarters, Block D',
-      skills: ['Landscaping', 'Plant Care', 'Irrigation'],
-      notes: 'Expert in tropical plants'
-    },
-    {
-      id: 'staff_003',
-      name: 'Raj Electrician',
-      email: 'raj.electrician@estate.com',
-      phone: '+91 9876543205',
-      role: 'electrician',
-      department: 'Maintenance',
-      employeeId: 'STF-00125',
-      estateId: 'estate_001',
-      joinDate: '2023-02-20',
-      status: 'active',
-      salary: 22000,
-      workSchedule: '24/7 On-call',
-      emergencyContact: '+91 9876543206',
-      address: 'Near Estate',
-      skills: ['Electrical Repair', 'Wiring', 'Safety Checks'],
-      notes: 'Certified electrician'
-    },
-    {
-      id: 'staff_004',
-      name: 'Suresh Plumber',
-      email: 'suresh.plumber@estate.com',
-      phone: '+91 9876543207',
-      role: 'plumber',
-      department: 'Maintenance',
-      employeeId: 'STF-00126',
-      estateId: 'estate_001',
-      joinDate: '2023-01-15',
-      status: 'on_leave',
-      salary: 20000,
-      workSchedule: 'Mon-Sat, 8AM-5PM',
-      emergencyContact: '+91 9876543208',
-      address: 'Staff Quarters, Block D',
-      skills: ['Plumbing', 'Water Systems', 'Repair'],
-      notes: 'On medical leave until Feb 1'
-    }
-  ],
-  staffAttendance: [
-    {
-      id: 1,
-      staffId: 'staff_001',
-      date: '2024-01-18',
-      checkIn: '09:00',
-      checkOut: '18:00',
-      hours: 9,
-      status: 'present',
-      notes: ''
-    },
-    {
-      id: 2,
-      staffId: 'staff_002',
-      date: '2024-01-18',
-      checkIn: '07:00',
-      checkOut: '16:00',
-      hours: 9,
-      status: 'present',
-      notes: ''
-    },
-    {
-      id: 3,
-      staffId: 'staff_003',
-      date: '2024-01-18',
-      checkIn: '10:00',
-      checkOut: '18:00',
-      hours: 8,
-      status: 'present',
-      notes: 'Emergency repair in Block A'
-    }
-  ],
-  staffTasks: [
-    {
-      id: 1,
-      title: 'Clean Common Areas - Block A',
-      assignedTo: 'staff_001',
-      assignedName: 'John Cleaner',
-      priority: 'high',
-      status: 'in_progress',
-      dueDate: new Date(Date.now() + 86400000).toISOString(),
-      location: 'Block A, Ground Floor',
-      description: 'Clean corridors, lobby, and common areas',
-      progress: 60
-    },
-    {
-      id: 2,
-      title: 'Garden Maintenance',
-      assignedTo: 'staff_002',
-      assignedName: 'Mike Gardener',
-      priority: 'medium',
-      status: 'pending',
-      dueDate: new Date(Date.now() + 172800000).toISOString(),
-      location: 'Central Garden',
-      description: 'Trim hedges and water plants',
-      progress: 0
-    },
-    {
-      id: 3,
-      title: 'Light Bulb Replacement',
-      assignedTo: 'staff_003',
-      assignedName: 'Raj Electrician',
-      priority: 'high',
-      status: 'completed',
-      dueDate: new Date(Date.now() - 86400000).toISOString(),
-      location: 'Parking Area 2',
-      description: 'Replace faulty bulbs',
-      progress: 100
-    }
-  ]
+  estates: [],
+  pendingInvites: [],
+  staffMembers: [],
+  staffAttendance: [],
+  staffTasks: []
 }
 
-// Simulated API calls
+// Mock API implementation (unchanged)
 const mockAPI = {
-  // Get announcements from placeholder API or fallback to hardcoded data
   async getAnnouncements() {
     try {
-      // Using JSONPlaceholder as a placeholder API
-      const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=3');
+      const response = await fetch('https://');
       const data = await response.json();
       
-      // Transform placeholder data to our format
       return data.map((post, index) => ({
         id: post.id,
         title: `Announcement: ${post.title.split(' ').slice(0, 3).join(' ')}`,
@@ -296,10 +63,8 @@ const mockAPI = {
     }
   },
 
-  // Save announcements to placeholder API (simulated)
   async saveAnnouncement(announcement) {
     try {
-      // This is a simulated API call - JSONPlaceholder doesn't actually save
       const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
         method: 'POST',
         body: JSON.stringify(announcement),
@@ -315,12 +80,9 @@ const mockAPI = {
     }
   },
 
-  // Verify visitor pass with API
   async verifyVisitorPass(code, pin) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Check blacklist
     const blacklistedCodes = ['BLOCK123', 'BLOCK456', 'DENY789'];
     const isBlacklisted = blacklistedCodes.includes(code);
     
@@ -333,13 +95,11 @@ const mockAPI = {
       };
     }
     
-    // Get random resident
     const getRandomResident = () => {
       const residents = ['A-101', 'A-102', 'B-201', 'B-202', 'C-301', 'C-302'];
       return residents[Math.floor(Math.random() * residents.length)];
     };
     
-    // Simulate visitor data
     const visitorData = {
       id: `visitor_${Date.now()}`,
       code: code,
@@ -352,10 +112,8 @@ const mockAPI = {
       verifiedBy: 'QR Scan'
     };
     
-    // Add to current visitors in hardcoded data
     HARDCODED_DATA.currentVisitors.unshift(visitorData);
     
-    // Log the verification
     const logEntry = {
       id: Date.now(),
       type: 'visitor_verified',
@@ -377,42 +135,34 @@ const mockAPI = {
     };
   },
 
-  // Get security logs
   async getSecurityLogs() {
     return HARDCODED_DATA.securityLogs || [];
   },
 
-  // Get user data
   async getUserData() {
     return HARDCODED_DATA.userData;
   },
 
-  // Get estates data
   async getEstates() {
     return HARDCODED_DATA.estates;
   },
 
-  // Get staff members
   async getStaffMembers() {
     return HARDCODED_DATA.staffMembers;
   },
 
-  // Get staff attendance
   async getStaffAttendance() {
     return HARDCODED_DATA.staffAttendance;
   },
 
-  // Get staff tasks
   async getStaffTasks() {
     return HARDCODED_DATA.staffTasks;
   },
 
-  // Get pending invites
   async getPendingInvites() {
     return HARDCODED_DATA.pendingInvites;
   },
 
-  // Get admin's estate
   async getAdminEstate(adminId) {
     const estate = HARDCODED_DATA.estates.find(e => e.adminId === adminId);
     if (!estate) {
@@ -421,27 +171,22 @@ const mockAPI = {
     return estate;
   },
 
-  // Save security incident
   async saveSecurityIncident(incident) {
     HARDCODED_DATA.securityIncidents.unshift(incident);
     return { success: true };
   },
 
-  // Save broadcast
   async saveBroadcast(broadcast) {
     HARDCODED_DATA.broadcasts.unshift(broadcast);
     return { success: true };
   },
 
-  // Save emergency alert
   async saveEmergencyAlert(alert) {
     HARDCODED_DATA.emergencyAlerts.unshift(alert);
     return { success: true };
   },
 
-  // Send user invitation
   async sendUserInvitation(invitation) {
-    // Generate unique token with estate identifier
     const timestamp = Date.now();
     const randomSuffix = Math.floor(Math.random() * 1000);
     const token = `invite_${timestamp}_${randomSuffix}_${invitation.estateId}`;
@@ -455,16 +200,15 @@ const mockAPI = {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
     
-    // Remove any existing invites with same email for this estate
     HARDCODED_DATA.pendingInvites = HARDCODED_DATA.pendingInvites.filter(
       invite => !(invite.email === invitation.email && invite.estateId === invitation.estateId)
     );
     
     HARDCODED_DATA.pendingInvites.unshift(invitationData);
     
-    // Simulate email sending
+    // Log to console (in real app, this would send email)
     console.log('📧 Email sent to:', invitation.email);
-    console.log('Invitation Link:', `${window.location.origin}/signup/${token}`);
+    console.log('Invitation Link:', `${typeof window !== 'undefined' ? window.location.origin : ''}/signup/${token}`);
     console.log('Estate-specific identifier:', invitation.estateId);
     
     return { 
@@ -474,7 +218,6 @@ const mockAPI = {
     };
   },
 
-  // Add new staff member
   async addStaffMember(staffData) {
     const staffId = `staff_${Date.now()}`;
     const employeeId = `STF-${String(Date.now()).slice(-5)}`;
@@ -492,7 +235,6 @@ const mockAPI = {
     return { success: true, staff: newStaff };
   },
 
-  // Update staff member
   async updateStaffMember(staffId, updates) {
     const index = HARDCODED_DATA.staffMembers.findIndex(s => s.id === staffId);
     if (index !== -1) {
@@ -505,13 +247,11 @@ const mockAPI = {
     return { success: false };
   },
 
-  // Delete staff member
   async deleteStaffMember(staffId) {
     HARDCODED_DATA.staffMembers = HARDCODED_DATA.staffMembers.filter(s => s.id !== staffId);
     return { success: true };
   },
 
-  // Mark attendance
   async markAttendance(attendanceData) {
     const newAttendance = {
       id: Date.now(),
@@ -523,7 +263,6 @@ const mockAPI = {
     return { success: true, attendance: newAttendance };
   },
 
-  // Assign task to staff
   async assignStaffTask(taskData) {
     const newTask = {
       id: Date.now(),
@@ -536,7 +275,6 @@ const mockAPI = {
     return { success: true, task: newTask };
   },
 
-  // Update task status
   async updateTaskStatus(taskId, status) {
     const index = HARDCODED_DATA.staffTasks.findIndex(t => t.id === taskId);
     if (index !== -1) {
@@ -644,7 +382,7 @@ export default function SecurityDashboard() {
           mockAPI.getUserData(),
           mockAPI.getEstates(),
           mockAPI.getPendingInvites(),
-          mockAPI.getAdminEstate(userData.id || 'admin_001'),
+          mockAPI.getAdminEstate('admin_001'),
           mockAPI.getStaffMembers(),
           mockAPI.getStaffAttendance(),
           mockAPI.getStaffTasks(),
@@ -666,7 +404,6 @@ export default function SecurityDashboard() {
         setUserData(HARDCODED_DATA.userData)
         setEstates(HARDCODED_DATA.estates)
         setPendingInvites(HARDCODED_DATA.pendingInvites)
-        setAdminEstate(HARDCODED_DATA.estates[0])
         setStaffMembers(HARDCODED_DATA.staffMembers)
         setStaffAttendance(HARDCODED_DATA.staffAttendance)
         setStaffTasks(HARDCODED_DATA.staffTasks)
@@ -682,11 +419,14 @@ export default function SecurityDashboard() {
   // Get available camera devices
   const getCameraDevices = async () => {
     try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      const videoDevices = devices.filter(device => device.kind === 'videoinput')
-      setCameraDevices(videoDevices)
-      if (videoDevices.length > 0) {
-        setSelectedCamera(videoDevices[0].deviceId)
+      // Check if we're in browser environment
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices()
+        const videoDevices = devices.filter(device => device.kind === 'videoinput')
+        setCameraDevices(videoDevices)
+        if (videoDevices.length > 0) {
+          setSelectedCamera(videoDevices[0].deviceId)
+        }
       }
     } catch (error) {
       console.error('Error getting camera devices:', error)
@@ -702,7 +442,7 @@ export default function SecurityDashboard() {
 
   // Handle QR Code Scan
   const handleScan = async (detectedCodes) => {
-    if (detectedCodes.length > 0 && scanning) {
+    if (detectedCodes && detectedCodes.length > 0 && scanning) {
       const scannedData = detectedCodes[0].rawValue
       setScanning(false) // Pause scanning
       
@@ -739,10 +479,11 @@ export default function SecurityDashboard() {
             }, 500)
           } else {
             // Only code scanned, ask for PIN
-            alert(`✅ QR Code scanned!\nVisitor Code: ${code}\n\nPlease enter PIN for verification.`)
+            alert(`QR Code scanned!\nVisitor Code: ${code}\n\nPlease enter PIN for verification.`)
             setShowScanner(false)
             // Focus on PIN input field
-            document.getElementById('pinInput')?.focus()
+            const pinInput = document.getElementById('pinInput')
+            if (pinInput) pinInput.focus()
           }
         }
         
@@ -795,7 +536,7 @@ export default function SecurityDashboard() {
         setSecurityLogs([result.log, ...securityLogs])
         
         // Show success message
-        alert(`✅ ACCESS GRANTED!\n\nVisitor: ${code}\nResident: ${result.visitor.resident}\nTime: ${new Date().toLocaleTimeString()}\n\nEntry logged successfully.`)
+        alert(`ACCESS GRANTED!\n\nVisitor: ${code}\nResident: ${result.visitor.resident}\nTime: ${new Date().toLocaleTimeString()}\n\nEntry logged successfully.`)
         
         // Add to activity log
         const newAnnouncement = {
@@ -842,7 +583,7 @@ export default function SecurityDashboard() {
             method: 'QR Scan'
           })
         } else {
-          alert(`❌ Verification Failed\n\n${result.message}`)
+          alert(`Verification Failed\n\n${result.message}`)
         }
       }
     } catch (error) {
@@ -872,11 +613,6 @@ export default function SecurityDashboard() {
     } else {
       alert('Please enter both code and PIN for verification')
     }
-  }
-
-  const checkBlacklist = (code) => {
-    const blacklistedCodes = ['BLOCK123', 'BLOCK456', 'DENY789']
-    return blacklistedCodes.includes(code)
   }
 
   const handleCheckout = (id) => {
@@ -928,7 +664,7 @@ export default function SecurityDashboard() {
     await mockAPI.saveAnnouncement(broadcast)
 
     // Show confirmation
-    alert(`📢 Broadcast sent!\nType: ${newAnnouncement.type}\nPriority: ${newAnnouncement.priority}\n\nMessage: ${newAnnouncement.message}`)
+    alert(`Broadcast sent!\nType: ${newAnnouncement.type}\nPriority: ${newAnnouncement.priority}\n\nMessage: ${newAnnouncement.message}`)
 
     // Reset form
     setNewAnnouncement({
@@ -944,7 +680,7 @@ export default function SecurityDashboard() {
     if (emergencyMessage) {
       const emergencyAlert = {
         id: Date.now(),
-        title: '🚨 EMERGENCY ALERT',
+        title: 'EMERGENCY ALERT',
         message: emergencyMessage,
         type: 'emergency',
         priority: 'urgent',
@@ -960,7 +696,7 @@ export default function SecurityDashboard() {
       // Save emergency alert via API
       await mockAPI.saveEmergencyAlert(emergencyAlert)
 
-      alert('🚨 EMERGENCY ALERT SENT TO ALL RESIDENTS AND ADMIN!')
+      alert('EMERGENCY ALERT SENT TO ALL RESIDENTS AND ADMIN!')
     }
   }
 
@@ -977,7 +713,7 @@ export default function SecurityDashboard() {
     try {
       const invitationData = {
         ...newUser,
-        estateId: adminEstate.id
+        estateId: adminEstate.id || 'estate_001'
       }
       
       const result = await mockAPI.sendUserInvitation(invitationData)
@@ -1602,39 +1338,10 @@ export default function SecurityDashboard() {
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="font-semibold text-blue-900 mb-2">Entry/Exit Logs</h4>
                   <p className="text-blue-800 text-sm">
-                    Total entries today: {currentVisitors.length + 5}
+                    Total entries today: {currentVisitors.length}
                     <br />
                     QR Scans: {currentVisitors.filter(v => v.verifiedBy === 'QR Scan').length}
-                    <br />
-                    Last entry: 30 minutes ago
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Emergency Alerts Section */}
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-red-900">Emergency Alerts</h3>
-                <button 
-                  onClick={() => setActiveTab('broadcast')}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium"
-                >
-                  Send Emergency Broadcast
-                </button>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="p-4 bg-white border border-red-300 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-bold text-red-800">🚨 Panic Alert Received</h4>
-                      <p className="text-red-700 mt-1">Unit C-303 • 9:15 AM • Responding...</p>
-                    </div>
-                    <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium">
-                      View Details
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1720,45 +1427,7 @@ export default function SecurityDashboard() {
               )}
             </div>
 
-            <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="font-semibold text-yellow-900 mb-2">Quick Actions</h4>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => {
-                    setNewAnnouncement({
-                      title: 'Security Patrol Update',
-                      message: 'Increased patrol frequency in Block A',
-                      type: 'security',
-                      priority: 'normal'
-                    })
-                    setActiveTab('broadcast')
-                  }}
-                  className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 font-medium"
-                >
-                  Send Security Update
-                </button>
-                <button
-                  onClick={() => {
-                    setNewAnnouncement({
-                      title: 'Maintenance Notice',
-                      message: 'Gate maintenance scheduled for tomorrow',
-                      type: 'maintenance',
-                      priority: 'high'
-                    })
-                    setActiveTab('broadcast')
-                  }}
-                  className="px-4 py-2 bg-orange-100 text-orange-800 rounded hover:bg-orange-200 font-medium"
-                >
-                  Send Maintenance Alert
-                </button>
-                <button
-                  onClick={handleSendEmergencyAlert}
-                  className="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200 font-medium"
-                >
-                  Send Emergency Alert
-                </button>
-              </div>
-            </div>
+            
           </div>
         )}
 
@@ -1798,10 +1467,10 @@ export default function SecurityDashboard() {
                     onChange={(e) => setNewAnnouncement({...newAnnouncement, type: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
                   >
-                    <option value="general">📢 General Announcement</option>
-                    <option value="security">🛡️ Security Update</option>
-                    <option value="maintenance">🔧 Maintenance Notice</option>
-                    <option value="emergency">🚨 Emergency Alert</option>
+                    <option value="general">General Announcement</option>
+                    <option value="security">Security Update</option>
+                    <option value="maintenance">Maintenance Notice</option>
+                    <option value="emergency">Emergency Alert</option>
                   </select>
                 </div>
                 
@@ -1855,16 +1524,6 @@ export default function SecurityDashboard() {
                   Send Emergency Alert
                 </button>
               </div>
-              
-              <div className="text-sm text-gray-800">
-                <p className="font-medium mb-2">📝 Broadcasts will be sent to:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>All residents via notifications</li>
-                  <li>Admin dashboard</li>
-                  <li>Other security personnel</li>
-                  <li>Announcements log (stored for 30 days)</li>
-                </ul>
-              </div>
             </div>
           </div>
         )}
@@ -1877,19 +1536,17 @@ export default function SecurityDashboard() {
               <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Create New User</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Invite New User</h3>
                     <p className="text-gray-700 mt-1">
-                      Estate: <span className="font-semibold text-blue-700">{adminEstate?.name}</span>
+                      Estate: <span className="font-semibold text-blue-700">{adminEstate?.name || 'N/A'}</span>
                     </p>
                   </div>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                    Admin Access Only
-                  </span>
+                  
                   <button
                       onClick={() => router.push('/dashboard/admin/users')}
                       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
                     >
-                      + View Users
+                      View Users
                     </button>
                 </div>
                 
@@ -1983,8 +1640,8 @@ export default function SecurityDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-blue-900">Estate Information</p>
-                        <p className="text-blue-800">{adminEstate?.name}</p>
-                        <p className="text-sm text-blue-700">{adminEstate?.address}</p>
+                        <p className="text-blue-800">{adminEstate?.name || 'No estate assigned'}</p>
+                        <p className="text-sm text-blue-700">{adminEstate?.address || ''}</p>
                       </div>
                       <div className="text-right">
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
@@ -1993,7 +1650,7 @@ export default function SecurityDashboard() {
                       </div>
                     </div>
                     <p className="text-xs text-blue-600 mt-2">
-                      💡 User will automatically be authorized for this estate only
+                      User will automatically be authorized for this estate only
                     </p>
                   </div>
                   
@@ -2011,17 +1668,6 @@ export default function SecurityDashboard() {
                       'Send Invitation Email'
                     )}
                   </button>
-                  
-                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">📧 What happens next?</h4>
-                    <ul className="text-sm text-gray-700 space-y-1">
-                      <li>• User receives email with invitation link</li>
-                      <li>• Link contains unique  with estate identifier</li>
-                      <li>• User clicks link to complete registration</li>
-                      <li>• Account is automatically authorized for <strong>{adminEstate?.name}</strong></li>
-                      <li>• Link expires in 7 days for security</li>
-                    </ul>
-                  </div>
                 </div>
               </div>
 
@@ -2081,7 +1727,7 @@ export default function SecurityDashboard() {
                             <div className="mt-2">
                               <button 
                                 onClick={() => {
-                                  navigator.clipboard.writeText(`${window.location.origin}/signup?token=${invite.token}`);
+                                  navigator.clipboard.writeText(`${typeof window !== 'undefined' ? window.location.origin : ''}/signup?token=${invite.token}`);
                                   alert('Invitation link copied to clipboard!');
                                 }}
                                 className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium"
@@ -2103,89 +1749,6 @@ export default function SecurityDashboard() {
                     ))}
                   </div>
                 )}
-                
-                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h4 className="font-semibold text-green-900 mb-2">Security Features</h4>
-                  <div className="text-sm text-green-800 space-y-1">
-                    <p className="flex items-center">
-                      <span className="mr-2">🔒</span>
-                      <span>Each invitation link is unique and estate-specific</span>
-                    </p>
-                    <p className="flex items-center">
-                      <span className="mr-2">⏳</span>
-                      <span>Links expire after 7 days automatically</span>
-                    </p>
-                    <p className="flex items-center">
-                      <span className="mr-2">🏢</span>
-                      <span>Users can only register for <strong>{adminEstate?.name}</strong></span>
-                    </p>
-                    <p className="flex items-center">
-                      <span className="mr-2">👮</span>
-                      <span>Only authorized admins can send invitations</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Estate Information */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-blue-900 mb-4">Estate-Specific Authorization System</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">Current Estate Details</h4>
-                  {adminEstate && (
-                    <div className="bg-white/50 p-4 rounded-lg border border-blue-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <h5 className="text-lg font-bold text-purple-800">{adminEstate.name}</h5>
-                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          Admin: {userData.name}
-                        </span>
-                      </div>
-                      <p className="text-gray-700 mb-3">{adminEstate.address}</p>
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-gray-900 mb-1">Available Units:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {adminEstate.units.map(unit => (
-                            <span key={unit} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                              {unit}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm text-blue-600">
-                        Estate ID: <code className="bg-blue-50 px-2 py-1 rounded">{adminEstate.id}</code>
-                      </p>
-                    </div>
-                  )}
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-purple-900 mb-2">How Authorization Works</h4>
-                  <ul className="text-blue-800 space-y-2">
-                    <li className="flex items-start">
-                      <span className="mr-2">1️⃣</span>
-                      <span>Admin logged into <strong>{adminEstate?.name}</strong></span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">2️⃣</span>
-                      <span>Estate identifier <code className="bg-blue-50 px-1 rounded">{adminEstate?.id}</code> is automatically embedded in invitation links</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">3️⃣</span>
-                      <span>User receives email with unique, time-limited invitation link</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">4️⃣</span>
-                      <span>Link validates estate identifier during registration</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">5️⃣</span>
-                      <span>User account is automatically authorized only for this estate</span>
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>
@@ -2194,64 +1757,7 @@ export default function SecurityDashboard() {
         {/* Staff Management Tab */}
         {activeTab === 'staff' && (
           <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-md p-6 border border-green-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Total Staff</h3>
-                    <p className="text-3xl font-bold text-green-700">{staffMembers.length}</p>
-                    <p className="text-sm text-gray-600 mt-1">{activeStaffCount} active</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 text-xl">👨‍🔧</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-blue-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Present Today</h3>
-                    <p className="text-3xl font-bold text-blue-700">{todayPresentCount}</p>
-                    <p className="text-sm text-gray-600 mt-1">Out of {activeStaffCount}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 text-xl">✅</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-amber-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Active Tasks</h3>
-                    <p className="text-3xl font-bold text-amber-600">{staffTasks.length}</p>
-                    <p className="text-sm text-gray-600 mt-1">{taskStats.completed} completed</p>
-                  </div>
-                  <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <span className="text-amber-600 text-xl">📋</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow-md p-6 border border-purple-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Departments</h3>
-                    <p className="text-3xl font-bold text-purple-600">
-                      {[...new Set(staffMembers.map(s => s.department))].length}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">Different teams</p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-purple-600 text-xl">🏢</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {/* Staff List */}
               <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                 <div className="flex justify-between items-center mb-6">
@@ -2343,282 +1849,7 @@ export default function SecurityDashboard() {
                   )}
                 </div>
               </div>
-
-              {/* Attendance & Tasks */}
-              <div className="space-y-6">
-                {/* Today's Attendance */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">Today's Attendance</h3>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                      {todayAttendance.length} Marked
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-3">Mark Attendance</h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium mb-2 text-gray-800">Staff Member</label>
-                          <select
-                            name="staffId"
-                            value={attendanceData.staffId}
-                            onChange={handleAttendanceInputChange}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                          >
-                            <option value="">Select staff member</option>
-                            {staffMembers.map(staff => (
-                              <option key={staff.id} value={staff.id}>
-                                {staff.name} ({staff.department})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-800">Check In</label>
-                            <input
-                              type="time"
-                              name="checkIn"
-                              value={attendanceData.checkIn}
-                              onChange={handleAttendanceInputChange}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-800">Check Out</label>
-                            <input
-                              type="time"
-                              name="checkOut"
-                              value={attendanceData.checkOut}
-                              onChange={handleAttendanceInputChange}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2 text-gray-800">Notes</label>
-                          <input
-                            type="text"
-                            name="notes"
-                            value={attendanceData.notes}
-                            onChange={handleAttendanceInputChange}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                            placeholder="Optional notes"
-                          />
-                        </div>
-                        <button
-                          onClick={handleMarkAttendance}
-                          disabled={!attendanceData.staffId || !attendanceData.checkIn}
-                          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                          Mark Attendance
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-900">Recent Attendance</h4>
-                      {todayAttendance.length === 0 ? (
-                        <p className="text-gray-600 text-sm">No attendance marked for today</p>
-                      ) : (
-                        todayAttendance.map(record => (
-                          <div key={record.id} className="flex justify-between items-center p-3 border rounded-lg">
-                            <div>
-                              <p className="font-medium text-gray-900">{getStaffName(record.staffId)}</p>
-                              <p className="text-sm text-gray-700">
-                                {record.checkIn} - {record.checkOut || 'Present'} • {record.hours}h
-                              </p>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
-                              {getStatusText(record.status)}
-                            </span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Assign Task */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Assign Task</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Task Title *</label>
-                      <input
-                        type="text"
-                        name="title"
-                        value={newTask.title}
-                        onChange={handleTaskInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        placeholder="Enter task title"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Description</label>
-                      <textarea
-                        name="description"
-                        value={newTask.description}
-                        onChange={handleTaskInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        rows="2"
-                        placeholder="Enter task description"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-800">Assign To</label>
-                        <select
-                          name="assignedTo"
-                          value={newTask.assignedTo}
-                          onChange={handleTaskInputChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        >
-                          <option value="">Select staff</option>
-                          {staffMembers.map(staff => (
-                            <option key={staff.id} value={staff.id}>
-                              {staff.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-800">Priority</label>
-                        <select
-                          name="priority"
-                          value={newTask.priority}
-                          onChange={handleTaskInputChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-800">Due Date</label>
-                        <input
-                          type="date"
-                          name="dueDate"
-                          value={newTask.dueDate}
-                          onChange={handleTaskInputChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-800">Location</label>
-                        <input
-                          type="text"
-                          name="location"
-                          value={newTask.location}
-                          onChange={handleTaskInputChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                          placeholder="e.g., Block A"
-                        />
-                      </div>
-                    </div>
-                    
-                    <button
-                      onClick={handleAssignTask}
-                      disabled={!newTask.title || !newTask.assignedTo}
-                      className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      Assign Task
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
-
-            {/* Staff Tasks Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Staff Tasks</h3>
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                  {taskStats.total} Total • {taskStats.completed} Completed
-                </span>
-              </div>
-              
-              <div className="space-y-4">
-                {staffTasks.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">📋</span>
-                    </div>
-                    <p className="text-gray-700 text-lg">No tasks assigned</p>
-                  </div>
-                ) : (
-                  staffTasks.map(task => (
-                    <div key={task.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-bold text-gray-900">{task.title}</h4>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-xs text-gray-700">
-                              Assigned to: {task.assignedName}
-                            </span>
-                            <span className="text-xs text-gray-700">
-                              Location: {task.location}
-                            </span>
-                            <span className="text-xs text-gray-700">
-                              Due: {new Date(task.dueDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                            {getPriorityIcon(task.priority)} {task.priority}
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                            {getStatusText(task.status)}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">{task.description}</p>
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                task.status === 'completed' ? 'bg-green-600' :
-                                task.status === 'in_progress' ? 'bg-blue-600' : 'bg-yellow-600'
-                              }`}
-                              style={{ width: `${task.progress}%` }}
-                            ></div>
-                          </div>
-                          <p className="text-xs text-gray-600 mt-1">{task.progress}% complete</p>
-                        </div>
-                        <div className="flex space-x-2 ml-4">
-                          <button
-                            onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}
-                            disabled={task.status === 'in_progress'}
-                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
-                          >
-                            Start
-                          </button>
-                          <button
-                            onClick={() => handleUpdateTaskStatus(task.id, 'completed')}
-                            disabled={task.status === 'completed'}
-                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm disabled:opacity-50"
-                          >
-                            Complete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
             {/* Staff Form Modal */}
             {(showStaffForm || editingStaff) && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -2836,11 +2067,11 @@ export default function SecurityDashboard() {
             </div>
             
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-700 mb-1">Total Entries Today</p>
                 <p className="text-2xl font-bold text-green-800">
-                  {currentVisitors.length + 12}
+                  {currentVisitors.length }
                 </p>
               </div>
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -2854,10 +2085,6 @@ export default function SecurityDashboard() {
                 <p className="text-2xl font-bold text-yellow-800">
                   {currentVisitors.filter(v => v.verifiedBy !== 'QR Scan').length}
                 </p>
-              </div>
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-700 mb-1">Security Incidents</p>
-                <p className="text-2xl font-bold text-red-800">3</p>
               </div>
             </div>
             
@@ -2914,35 +2141,6 @@ export default function SecurityDashboard() {
                   ))}
                 </tbody>
               </table>
-            </div>
-            
-            {/* Recent Security Incidents */}
-            <div className="mt-8">
-              <h4 className="font-semibold text-gray-900 mb-4">Recent Security Incidents</h4>
-              <div className="space-y-3">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h5 className="font-medium text-red-900">Blacklisted Visitor Attempt</h5>
-                      <p className="text-sm text-red-700 mt-1">Code: BLOCK123 • Time: 10:30 AM</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded">
-                      Blocked
-                    </span>
-                  </div>
-                </div>
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h5 className="font-medium text-yellow-900">Late Night Entry</h5>
-                      <p className="text-sm text-yellow-700 mt-1">Visitor XYZ789 • Time: 11:45 PM</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
-                      Warning Issued
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -3012,7 +2210,7 @@ export default function SecurityDashboard() {
               <div className="mt-6 space-y-4">
                 <div className="text-center">
                   <p className="text-gray-700 mb-2">
-                    📍 Position QR code within the frame
+                     Position QR code within the frame
                   </p>
                   <div className="flex items-center justify-center space-x-4">
                     <div className="flex items-center">

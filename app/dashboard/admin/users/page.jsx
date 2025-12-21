@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 // Mock data for demonstration
 const MOCK_DATA = {
   residents: [
-    {
+    /*{
       id: 'RES001',
       name: 'Amit Sharma',
       email: 'amit.sharma@example.com',
@@ -18,49 +18,10 @@ const MOCK_DATA = {
       status: 'active',
       type: 'resident',
       profileImage: '👨‍💼'
-    },
-    {
-      id: 'RES002',
-      name: 'Priya Patel',
-      email: 'priya.patel@example.com',
-      phone: '+91 9876543212',
-      unitNumber: 'B-202',
-      residentSince: '2021-08-22',
-      occupation: 'Doctor',
-      emergencyContact: '+91 9876543213',
-      status: 'active',
-      type: 'resident',
-      profileImage: '👩‍⚕️'
-    },
-    {
-      id: 'RES003',
-      name: 'Rahul Verma',
-      email: 'rahul.verma@example.com',
-      phone: '+91 9876543214',
-      unitNumber: 'C-303',
-      residentSince: '2023-01-10',
-      occupation: 'Business Owner',
-      emergencyContact: '+91 9876543215',
-      status: 'inactive',
-      type: 'resident',
-      profileImage: '👨‍💼'
-    },
-    {
-      id: 'RES004',
-      name: 'Sneha Gupta',
-      email: 'sneha.gupta@example.com',
-      phone: '+91 9876543216',
-      unitNumber: 'D-404',
-      residentSince: '2022-11-30',
-      occupation: 'Architect',
-      emergencyContact: '+91 9876543217',
-      status: 'active',
-      type: 'resident',
-      profileImage: '👩‍🎨'
-    },
+    },*/
   ],
   staff: [
-    {
+   /* {
       id: 'STF001',
       name: 'Rajesh Kumar',
       email: 'rajesh.staff@estatesecure.com',
@@ -72,49 +33,10 @@ const MOCK_DATA = {
       status: 'active',
       type: 'staff',
       profileImage: '👨‍🔧'
-    },
-    {
-      id: 'STF002',
-      name: 'Sunita Rao',
-      email: 'sunita.staff@estatesecure.com',
-      phone: '+91 9876543221',
-      role: 'Housekeeping Head',
-      department: 'Housekeeping',
-      joinDate: '2020-08-20',
-      salary: '₹28,000',
-      status: 'active',
-      type: 'staff',
-      profileImage: '👩‍🔧'
-    },
-    {
-      id: 'STF003',
-      name: 'Vikram Singh',
-      email: 'vikram.staff@estatesecure.com',
-      phone: '+91 9876543222',
-      role: 'Electrician',
-      department: 'Maintenance',
-      joinDate: '2022-02-10',
-      salary: '₹25,000',
-      status: 'active',
-      type: 'staff',
-      profileImage: '👨‍🔧'
-    },
-    {
-      id: 'STF004',
-      name: 'Meena Desai',
-      email: 'meena.staff@estatesecure.com',
-      phone: '+91 9876543223',
-      role: 'Accountant',
-      department: 'Finance',
-      joinDate: '2021-11-05',
-      salary: '₹40,000',
-      status: 'inactive',
-      type: 'staff',
-      profileImage: '👩‍💼'
-    },
+    },*/
   ],
   security: [
-    {
+    /*{
       id: 'SEC001',
       name: 'Arjun Mehta',
       email: 'arjun.security@estatesecure.com',
@@ -127,49 +49,7 @@ const MOCK_DATA = {
       status: 'active',
       type: 'security',
       profileImage: '👮'
-    },
-    {
-      id: 'SEC002',
-      name: 'Kavita Nair',
-      email: 'kavita.security@estatesecure.com',
-      phone: '+91 9876543231',
-      role: 'Security Officer',
-      badgeNumber: 'SG-2024-002',
-      shift: 'Evening (2 PM - 10 PM)',
-      joinDate: '2023-03-20',
-      experience: '1 year',
-      status: 'active',
-      type: 'security',
-      profileImage: '👮‍♀️'
-    },
-    {
-      id: 'SEC003',
-      name: 'Deepak Roy',
-      email: 'deepak.security@estatesecure.com',
-      phone: '+91 9876543232',
-      role: 'Night Security Incharge',
-      badgeNumber: 'SG-2024-003',
-      shift: 'Night (10 PM - 6 AM)',
-      joinDate: '2022-08-10',
-      experience: '3 years',
-      status: 'active',
-      type: 'security',
-      profileImage: '👮'
-    },
-    {
-      id: 'SEC004',
-      name: 'Suresh Iyer',
-      email: 'suresh.security@estatesecure.com',
-      phone: '+91 9876543233',
-      role: 'Security Officer',
-      badgeNumber: 'SG-2024-004',
-      shift: 'Morning (6 AM - 2 PM)',
-      joinDate: '2023-06-15',
-      experience: '6 months',
-      status: 'inactive',
-      type: 'security',
-      profileImage: '👮'
-    },
+    },*/
   ]
 }
 

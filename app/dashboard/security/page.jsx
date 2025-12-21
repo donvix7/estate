@@ -7,26 +7,18 @@ import { Scanner } from '@yudiel/react-qr-scanner'
 // Hardcoded database simulation
 const HARDCODED_DATA = {
   visitors: [
-    { id: 1, name: 'John Delivery', code: 'ABC123', pin: '4567', resident: 'A-101', purpose: 'Delivery', entryTime: '10:30 AM', status: 'active' },
-    { id: 2, name: 'Electrician', code: 'XYZ789', pin: '8910', resident: 'B-202', purpose: 'Service', entryTime: '2:00 PM', status: 'active' },
-    { id: 3, name: 'Amazon Delivery', code: 'DEL456', pin: '1234', resident: 'C-303', purpose: 'Delivery', entryTime: '4:15 PM', status: 'pending' }
-  ],
+    /*{ id: 1, name: 'John Delivery', code: 'ABC123', pin: '4567', resident: 'A-101', purpose: 'Delivery', entryTime: '10:30 AM', status: 'active' },
+   
+    */ ],
   logs: [
-    { id: 1, visitor: 'John Delivery', code: 'ABC123', type: 'entry', time: '10:30 AM', verified: true },
-    { id: 2, visitor: 'Electrician', code: 'XYZ789', type: 'entry', time: '2:00 PM', verified: true },
-    { id: 3, visitor: 'Sarah Guest', code: 'GUEST01', type: 'exit', time: '1:45 PM', verified: true },
-    { id: 4, visitor: 'Amazon Delivery', code: 'DEL456', type: 'entry', time: '4:15 PM', verified: false }
-  ],
+   /* { id: 1, visitor: 'John Delivery', code: 'ABC123', type: 'entry', time: '10:30 AM', verified: true },
+   */],
   alerts: [
-    { id: 1, type: 'panic', unit: 'C-303', time: '9:15 AM', status: 'responded', priority: 'high' },
-    { id: 2, type: 'unauthorized', location: 'Gate 2', time: '11:30 AM', status: 'investigating', priority: 'medium' },
-    { id: 3, type: 'suspicious', location: 'Parking Area', time: '3:45 PM', status: 'pending', priority: 'low' }
-  ],
+   /* { id: 1, type: 'panic', unit: 'C-303', time: '9:15 AM', status: 'responded', priority: 'high' },
+     */ ],
   announcements: [
-    { id: 1, title: 'Security Patrol Update', message: 'Night patrol timings changed to 10 PM - 6 AM', type: 'security', time: '2 hours ago' },
-    { id: 2, title: 'CCTV Maintenance', message: 'Camera maintenance in Parking Area from 2-4 PM', type: 'maintenance', time: '1 day ago' },
-    { id: 3, title: 'Visitor Policy Update', message: 'New visitor verification process effective tomorrow', type: 'policy', time: '2 days ago' }
-  ]
+   /* { id: 1, title: 'Security Patrol Update', message: 'Night patrol timings changed to 10 PM - 6 AM', type: 'security', time: '2 hours ago' },
+    */ ]
 }
 
 // Blacklisted codes
@@ -34,7 +26,7 @@ const BLACKLISTED_CODES = ['BLOCK123', 'BLOCK456', 'DENY789']
 
 // Security personnel mock data
 const SECURITY_PERSONNEL = {
-  id: 'SEC001',
+  /*id: 'SEC001',
   name: 'Rajesh Kumar',
   badgeNumber: 'SG-2024-001',
   role: 'Senior Security Officer',
@@ -55,7 +47,7 @@ const SECURITY_PERSONNEL = {
     relationship: 'Spouse',
     phone: '+91 9876543211'
   },
-  status: 'active'
+  status: 'active'*/
 }
 
 // Mock API functions
@@ -364,7 +356,7 @@ export default function SecurityDashboard() {
         const isBlacklisted = BLACKLISTED_CODES.includes(visitorCode);
         
         if (isBlacklisted) {
-          alert(`🚨 BLACKLISTED VISITOR DETECTED!\nPass Code: ${visitorCode}\nSecurity notified. Access denied.`);
+          alert(` BLACKLISTED VISITOR DETECTED!\nPass Code: ${visitorCode}\nSecurity notified. Access denied.`);
           
           const incident = {
             id: Date.now(),
@@ -462,7 +454,7 @@ export default function SecurityDashboard() {
     if (window.confirm('Are you sure you want to logout?')) {
       sessionStorage.removeItem('currentUser');
       sessionStorage.removeItem('sessionId');
-      router.push('/register');
+      router.push('/login');
     }
   }
 
@@ -707,56 +699,7 @@ export default function SecurityDashboard() {
       )}
 
       <div className="container mx-auto px-4 py-6">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Entries Today</p>
-                <p className="text-3xl font-bold text-blue-700">{securityStats.entriesToday}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 text-xl">↘️</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 border border-green-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Exits Today</p>
-                <p className="text-3xl font-bold text-green-600">{securityStats.exitsToday}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-green-600 text-xl">↗️</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 border border-purple-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Active Visitors</p>
-                <p className="text-3xl font-bold text-purple-600">{securityStats.activeVisitors}</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-purple-600 text-xl">👥</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 border border-yellow-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Pending Verifications</p>
-                <p className="text-3xl font-bold text-yellow-600">{securityStats.pendingVerifications}</p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <span className="text-yellow-600 text-xl">⏳</span>
-              </div>
-            </div>
-          </div>
-        </div>
+       
 
         {/* Tab Navigation */}
         <div className="flex border-b mb-6 overflow-x-auto">
@@ -860,7 +803,7 @@ export default function SecurityDashboard() {
                         onClick={() => handleManualQRInput('sample1')}
                         className="px-3 py-2 bg-green-100 text-green-700 rounded hover:bg-green-200 text-sm font-medium flex items-center"
                       >
-                        <span className="mr-1">✅</span> Valid Visitor
+                        <span className="mr-1"></span> Valid Visitor
                       </button>
                       <button
                         onClick={() => handleManualQRInput('blacklisted')}
@@ -929,12 +872,7 @@ export default function SecurityDashboard() {
                         ) : 'Verify & Allow Entry'}
                       </button>
                       
-                      <button
-                        onClick={handleTestBlacklist}
-                        className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-md transition-all"
-                      >
-                        Test Blacklisted Visitor
-                      </button>
+                      
                     </div>
                   </div>
                 </div>
@@ -1106,33 +1044,7 @@ export default function SecurityDashboard() {
               </table>
             </div>
             
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Log Statistics</h4>
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-gray-700">Total Logs Today</p>
-                  <p className="text-2xl font-bold text-blue-700">{todayLogs.length}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700">QR Scans</p>
-                  <p className="text-2xl font-bold text-purple-700">
-                    {todayLogs.filter(log => log.method === 'QR Scan').length}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700">Entry Logs</p>
-                  <p className="text-2xl font-bold text-green-700">
-                    {todayLogs.filter(log => log.type === 'entry').length}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700">Exit Logs</p>
-                  <p className="text-2xl font-bold text-orange-700">
-                    {todayLogs.filter(log => log.type === 'exit').length}
-                  </p>
-                </div>
-              </div>
-            </div>
+            
           </div>
         )}
 
@@ -1228,7 +1140,7 @@ export default function SecurityDashboard() {
 
             {/* Emergency Contact */}
             <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white">
-              <h4 className="text-xl font-bold mb-4">🚨 Emergency Contacts</h4>
+              <h4 className="text-xl font-bold mb-4"> Emergency Contacts</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white/20 p-4 rounded-lg">
                   <p className="font-medium">Police Control Room</p>
@@ -1291,91 +1203,6 @@ export default function SecurityDashboard() {
           </div>
         )}
 
-        {/* Quick Actions Tab */}
-        {activeTab === 'quick' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Quick Report */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-4">Quick Incident Report</h4>
-              <div className="space-y-3">
-                <select className="w-full p-3 border border-gray-300 rounded-lg text-gray-900">
-                  <option>Select Incident Type</option>
-                  <option>Unauthorized Entry</option>
-                  <option>Suspicious Activity</option>
-                  <option>Property Damage</option>
-                  <option>Noise Complaint</option>
-                </select>
-                <textarea 
-                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-900"
-                  rows="3"
-                  placeholder="Brief description..."
-                />
-                <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                  Submit Report
-                </button>
-              </div>
-            </div>
-
-            {/* Patrol Check-in */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-4">Patrol Check-in</h4>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="p-4 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 border border-green-200">
-                    <div className="text-center">
-                      <div className="text-2xl">📍</div>
-                      <div className="text-sm font-medium mt-2">Gate 1</div>
-                    </div>
-                  </button>
-                  <button className="p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 border border-blue-200">
-                    <div className="text-center">
-                      <div className="text-2xl">📍</div>
-                      <div className="text-sm font-medium mt-2">Parking</div>
-                    </div>
-                  </button>
-                  <button className="p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 border border-purple-200">
-                    <div className="text-center">
-                      <div className="text-2xl">📍</div>
-                      <div className="text-sm font-medium mt-2">Club House</div>
-                    </div>
-                  </button>
-                  <button className="p-4 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 border border-orange-200">
-                    <div className="text-center">
-                      <div className="text-2xl">📍</div>
-                      <div className="text-sm font-medium mt-2">Pool Area</div>
-                    </div>
-                  </button>
-                </div>
-                <button className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-                  Check-in at Current Location
-                </button>
-              </div>
-            </div>
-
-            {/* Emergency Actions */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-4">Emergency Actions</h4>
-              <div className="space-y-3">
-                <button className="w-full p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200 flex items-center justify-between">
-                  <span className="font-medium">Lock All Gates</span>
-                  <span>🔒</span>
-                </button>
-                <button className="w-full p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200 flex items-center justify-between">
-                  <span className="font-medium">Activate Sirens</span>
-                  <span>🚨</span>
-                </button>
-                <button className="w-full p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200 flex items-center justify-between">
-                  <span className="font-medium">Notify All Security</span>
-                  <span>📢</span>
-                </button>
-                <button className="w-full p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200 flex items-center justify-between">
-                  <span className="font-medium">Emergency Evacuation</span>
-                  <span>🚪</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Profile Tab */}
         {activeTab === 'profile' && (
@@ -1461,92 +1288,13 @@ export default function SecurityDashboard() {
                   </div>
                 </div>
                 
-                {/* Middle Column - Performance */}
-                <div className="space-y-6">
-                  {/* Performance Stats */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <h4 className="font-bold text-gray-900 mb-4 text-lg">Performance Metrics</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Total Shifts</p>
-                        <p className="text-2xl font-bold text-blue-700">{securityProfile?.performance?.totalShifts}</p>
-                      </div>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Punctuality</p>
-                        <p className="text-2xl font-bold text-green-700">{securityProfile?.performance?.punctuality}%</p>
-                      </div>
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Incidents Resolved</p>
-                        <p className="text-2xl font-bold text-purple-700">{securityProfile?.performance?.incidentsResolved}</p>
-                      </div>
-                      <div className="bg-orange-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Visitors Verified</p>
-                        <p className="text-2xl font-bold text-orange-700">{securityProfile?.performance?.visitorVerified}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Service Details */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h4 className="font-bold text-gray-900 mb-4 text-lg">Service Details</h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Join Date</p>
-                          <p className="font-medium text-gray-900">{formatDate(securityProfile?.joinDate)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Experience</p>
-                          <p className="font-medium text-gray-900">{securityProfile?.experience}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Security ID</p>
-                        <p className="font-mono text-gray-900">{securityProfile?.id}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                
                 
                 {/* Right Column - Training */}
                 <div className="space-y-6">
-                  {/* Training & Certifications */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <h4 className="font-bold text-gray-900 mb-4 text-lg">Training & Certifications</h4>
-                    <div className="space-y-3">
-                      {securityProfile?.training?.map((training, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <span className="text-blue-600">🎓</span>
-                          </div>
-                          <span className="font-medium text-gray-900">{training}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                 
                   
-                  {/* Quick Actions */}
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
-                    <h4 className="font-bold mb-4 text-lg">Quick Actions</h4>
-                    <div className="space-y-3">
-                      <button className="w-full p-3 bg-white/20 hover:bg-white/30 rounded-lg text-left flex items-center justify-between">
-                        <span>View Shift Schedule</span>
-                        <span>📅</span>
-                      </button>
-                      <button className="w-full p-3 bg-white/20 hover:bg-white/30 rounded-lg text-left flex items-center justify-between">
-                        <span>Download ID Card</span>
-                        <span>🪪</span>
-                      </button>
-                      <button className="w-full p-3 bg-white/20 hover:bg-white/30 rounded-lg text-left flex items-center justify-between">
-                        <span>Request Leave</span>
-                        <span>🏖️</span>
-                      </button>
-                      <button className="w-full p-3 bg-white/20 hover:bg-white/30 rounded-lg text-left flex items-center justify-between">
-                        <span>Training Materials</span>
-                        <span>📚</span>
-                      </button>
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
             </div>
