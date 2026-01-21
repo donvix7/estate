@@ -5,6 +5,40 @@ import { useRouter } from 'next/navigation'
 import { PanicButton } from '@/components/panic-button'
 import { VisitorPassGenerator } from '@/components/visitor-pass-generator'
 import { PaymentSystem } from '@/components/payment-system'
+import {
+  Home,
+  Users,
+  CreditCard,
+  Bell,
+  User,
+  LogOut,
+  Settings,
+  Phone,
+  Mail,
+  Shield,
+  AlertCircle,
+  CheckCircle,
+  Calendar,
+  Car,
+  Users as UsersIcon,
+  Building,
+  Edit,
+  Save,
+  X,
+  ChevronRight,
+  Download,
+  Eye,
+  Clock,
+  Package,
+  MessageSquare,
+  Activity,
+  BarChart3,
+  FileText,
+  HelpCircle,
+  ShieldAlert,
+  ShieldClose,
+  Settings2
+} from 'lucide-react'
 
 // Hardcoded database simulation
 const HARDCODED_DATA = {
@@ -293,10 +327,10 @@ export default function ResidentDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
-          <p className="mt-4 text-gray-700">Loading Resident Dashboard...</p>
+          <div className="animate-spin rounded-full h-14 w-14 border-t-2 border-b-2 border-cyan-500 mx-auto"></div>
+          <p className="mt-4 text-gray-300 text-lg">Loading Resident Dashboard...</p>
         </div>
       </div>
     );
@@ -304,49 +338,60 @@ export default function ResidentDashboard() {
 
   const visitorStats = getVisitorStatistics();
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: <Home className="w-5 h-5" /> },
+    { id: 'visitors', label: 'Visitors', icon: <Users className="w-5 h-5" /> },
+    { id: 'payments', label: 'Payments', icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'announcements', label: 'Announcements', icon: <Bell className="w-5 h-5" />, badge: getUnreadCount() },
+    { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-800 to-blue-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gradient-to-r from-gray-800 via-gray-800/95 to-gray-800 border-b border-gray-700/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">Resident Dashboard</h1>
-              <p className="text-blue-200">Unit {getUnitNumber()} | Welcome, {getUserName()}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <span className="text-white font-bold text-lg">ES</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Resident Dashboard</h1>
+                <p className="text-gray-400">
+                  <Building className="w-4 h-4 inline mr-2" />
+                  Unit {getUnitNumber()} | Welcome, {getUserName()}
+                </p>
+              </div>
             </div>
             <button 
               onClick={handleLogout}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-3 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-xl font-medium transition-all duration-300 border border-gray-700 hover:border-gray-600 flex items-center gap-2"
             >
+              <LogOut className="w-5 h-5" />
               Logout
             </button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-8">
         {/* Tabs */}
-        <div className="flex border-b mb-6 overflow-x-auto">
-          {[
-            { id: 'overview', label: 'Overview', icon: '📊' },
-            { id: 'visitors', label: 'Visitors', icon: '👥' },
-            { id: 'payments', label: 'Payments', icon: '💰' },
-            { id: 'announcements', label: 'Announcements', icon: '📢', badge: getUnreadCount() },
-            { id: 'profile', label: 'Profile', icon: '👤' }
-          ].map((tab) => (
+        <div className="flex border-b border-gray-700/50 mb-8 overflow-x-auto">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center px-6 py-3 relative font-medium flex-shrink-0 ${
+              className={`flex items-center px-6 py-4 relative font-medium flex-shrink-0 transition-all duration-300 ${
                 activeTab === tab.id 
-                  ? 'border-b-2 border-blue-700 text-blue-700' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'text-cyan-300 border-b-2 border-cyan-500 bg-gradient-to-t from-cyan-500/5 to-transparent' 
+                  : 'text-gray-400 hover:text-gray-300'
               }`}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <span className="mr-3">{tab.icon}</span>
               {tab.label}
               {tab.badge && tab.badge > 0 && (
-                <span className="absolute -top-1 right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg shadow-red-500/30">
                   {tab.badge}
                 </span>
               )}
@@ -356,44 +401,134 @@ export default function ResidentDashboard() {
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Emergency Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Emergency Panic System</h2>
-                <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                   24/7 Active
-                </span>
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 flex items-center justify-center ">
+                    <ShieldAlert className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Emergency Panic System</h2>
+                    <p className="text-gray-400">24/7 Active Monitoring</p>
+                  </div>
+                </div>
+                
               </div>
               <PanicButton />
             </div>
 
-            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12  rounded-xl flex items-center justify-center">
+                    <UsersIcon className="w-6 h-6 " />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-white">{visitorStats.thisMonth}</div>
+                    <div className="text-sm text-gray-400">This Month</div>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-gray-300 mb-2">Total Visitors</h4>
+                <div className="flex items-center gap-4 mt-4">
+                  <div>
+                    <div className="text-sm text-gray-400">Active</div>
+                    <div className="text-xl font-bold ">{visitorStats.active}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400">Pending</div>
+                    <div className="text-xl font-bold ">{visitorStats.pending}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12  rounded-xl flex items-center justify-center">
+                    <Bell className="w-6 h-6 " />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-white">{announcements.length}</div>
+                    <div className="text-sm text-gray-400">Announcements</div>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-gray-300 mb-2">Notifications</h4>
+                <div className="flex items-center gap-4 mt-4">
+                  <div>
+                    <div className="text-sm text-gray-400">Unread</div>
+                    <div className="text-xl font-bold ">{getUnreadCount()}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400">Total</div>
+                    <div className="text-xl font-bold ">{announcements.length}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12  rounded-xl flex items-center justify-center">
+                    <Activity className="w-6 h-6 " />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold ">3</div>
+                    <div className="text-sm text-gray-400">Years</div>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-gray-300 mb-2">Community Tenure</h4>
+                <p className="text-gray-400 text-sm">
+                  Resident since {residentData?.joinDate || '2023-01-15'}
+                </p>
+              </div>
+            </div>
+
             {/* Recent Visitors */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Recent Visitor Passes</h3>
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
+              <div className="flex justify-between items-center mb-8 text-white">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14  rounded-xl flex items-center justify-center">
+                    <Users className="w-7 h-7 " />
+                  </div>
+                  <div>
+                    <h3 className=" font-bold ">Recent Visitor Passes</h3>
+                    <p className="text-gray-400">{visitorStats.active} active visitors</p>
+                  </div>
+                </div>
                 <button 
                   onClick={() => setActiveTab('visitors')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-medium shadow-lg shadow-blue-500/25 transition-all duration-300 flex items-center gap-2"
                 >
+                  <Users className="w-5 h-5" />
                   Manage Visitors
                 </button>
               </div>
               <div className="space-y-4">
                 {visitors.slice(0, 2).map(visitor => (
-                  <div key={visitor.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
-                    <div>
-                      <p className="font-bold text-gray-900">{visitor.name}</p>
-                      <p className="text-sm text-gray-700 mt-1">{visitor.purpose} • {visitor.time}</p>
+                  <div key={visitor.id} className="bg-gray-900/50 border border-gray-700/50 rounded-xl p-6 hover:border-cyan-500/30 transition-all duration-300">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-white text-lg">{visitor.name}</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-gray-400 flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            {visitor.purpose}
+                          </span>
+                          <span className="text-gray-400 flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            {visitor.time}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                        visitor.status === 'Active' 
+                          ? 'text-green-300 ' 
+                          : 'text-amber-300'
+                      }`}>
+                        {visitor.status}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                      visitor.status === 'Active' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {visitor.status}
-                    </span>
                   </div>
                 ))}
               </div>
@@ -403,59 +538,91 @@ export default function ResidentDashboard() {
 
         {/* Visitors Tab */}
         {activeTab === 'visitors' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <VisitorPassGenerator />
             
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Visitor History</h3>
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
-                  {visitors.length} Total
-                </span>
-              </div>
-              <div className="space-y-4">
-                {visitors.map(visitor => (
-                  <div key={visitor.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-gray-900">{visitor.name}</p>
-                        <p className="text-sm text-gray-700 mt-1">{visitor.purpose}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-700">{visitor.time}</p>
-                        <span className={`text-xs px-3 py-1.5 rounded-full font-medium mt-2 ${
-                          visitor.status === 'Active' 
-                            ? 'bg-green-100 text-green-700' 
-                            : visitor.status === 'Pending'
-                            ? 'bg-yellow-100 text-yellow-700' 
-                            : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {visitor.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-2">Visitor Statistics</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-700">This Month</p>
-                    <p className="text-lg font-bold text-blue-700">{visitorStats.thisMonth}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-700">Active</p>
-                    <p className="text-lg font-bold text-green-700">{visitorStats.active}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-700">Pending</p>
-                    <p className="text-lg font-bold text-yellow-700">{visitorStats.pending}</p>
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 md:p-8">
+  <div className="flex justify-between items-center mb-6 md:mb-8 text-white">
+    <div className="flex items-center gap-3 md:gap-4">
+      <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center">
+        <Users className="w-5 h-5 md:w-7 md:h-7 " />
+      </div>
+      <div>
+        <h3 className="text-xl md:text-2xl font-bold text-white">Visitor History</h3>
+        <p className="text-gray-400 text-sm md:text-base">{visitors.length} total visitors</p>
+      </div>
+    </div>
+   
+  </div>
+
+  {/* Table Container */}
+  <div className="overflow-x-auto rounded-xl border border-gray-700/50">
+    <table className="min-w-full divide-y divide-gray-700/50">
+      <thead>
+        <tr className="bg-gray-900/50">
+          <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">
+            Visitor
+          </th>
+          <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider hidden sm:table-cell">
+            Purpose
+          </th>
+          <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">
+            Time
+          </th>
+          <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">
+            Status
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-700/50">
+        {visitors.map((visitor) => (
+          <tr 
+            key={visitor.id} 
+            className="bg-gray-900/30 hover:bg-gray-900/50 transition-colors duration-200"
+          >
+            <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mr-3 md:mr-4">
+                  <span className="text-cyan-400 text-sm">{visitor.name.charAt(0)}</span>
+                </div>
+                <div>
+                  <div className="text-sm md:text-base font-medium text-white">{visitor.name}</div>
+                  <div className="text-xs text-gray-400 sm:hidden">
+                    {visitor.purpose} • <Clock className="w-3 h-3 inline mr-1" /> {visitor.time}
                   </div>
                 </div>
               </div>
-            </div>
+            </td>
+            <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-300 hidden sm:table-cell">
+              {visitor.purpose}
+            </td>
+            <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-300 hidden md:table-cell">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-400" />
+                {visitor.time}
+              </div>
+            </td>
+            <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
+              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm font-medium ${
+                visitor.status === 'Active' 
+                  ? 'text-green-300' 
+                  : visitor.status === 'Pending'
+                  ? 'text-amber-300' 
+                  : 'text-gray-300'
+              }`}>
+                {visitor.status}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  
+
+
+</div>
           </div>
         )}
 
@@ -466,55 +633,72 @@ export default function ResidentDashboard() {
 
         {/* Announcements Tab */}
         {activeTab === 'announcements' && (
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Announcements & Notifications</h3>
-                <p className="text-gray-700 mt-1">
-                  {getUnreadCount()} unread • {announcements.length} total
-                </p>
+          <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
+            <div className="flex justify-between items-center mb-8 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center">
+                  <Bell className="w-7 h-7 " />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Announcements & Notifications</h3>
+                  <p className="text-gray-400">
+                    {getUnreadCount()} unread • {announcements.length} total
+                  </p>
+                </div>
               </div>
               <button
                 onClick={markAllAsRead}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium"
+                className="px-6 py-3 b text-cyan-400 rounded-xl hover:text-cyan-500 font-medium s transition-all duration-300"
               >
                 Mark All Read
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               {announcements.map(announcement => (
                 <div 
                   key={announcement.id} 
-                  className={`border rounded-lg p-4 ${!announcement.read ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}`}
+                  className={`border rounded-xl p-6 transition-all duration-300 ${
+                    !announcement.read 
+                      ? 'bg-gray-900/50 border-gray-700/50 hover:border-gray-600/50' 
+                      : 'bg-gray-900/50 border-gray-700/50 hover:border-gray-600/50'
+                  }`}
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-start space-x-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         announcement.type === 'maintenance' 
-                          ? 'bg-blue-100 text-blue-600' 
+                          ? 'bg-gray-900/50 border-gray-700/50 hover:border-gray-600/50' 
                           : announcement.type === 'security'
-                          ? 'bg-red-100 text-red-600'
-                          : 'bg-green-100 text-green-600'
+                          ? 'bg-gradient-to-br from-red-500/20 to-orange-500/20'
+                          : 'bg-gradient-to-br from-green-500/20 to-emerald-500/20'
                       }`}>
-                        {announcement.type === 'maintenance' ? '🔧' : 
-                         announcement.type === 'security' ? '🛡️' : '🎉'}
+                        <span className={`
+                          ${announcement.type === 'maintenance' ? 'text-blue-400' : 
+                            announcement.type === 'security' ? 'text-red-400' : 'text-green-400'}
+                        `}>
+                          {announcement.type === 'maintenance' ?<Settings2/> : 
+                           announcement.type === 'security' ? <ShieldAlert/> : <FileText/>}
+                        </span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900">{announcement.title}</h4>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                        <h4 className="font-bold text-white text-lg">{announcement.title}</h4>
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className={`text-sm px-4 py-1.5 rounded-full font-medium ${
                             announcement.type === 'maintenance' 
-                              ? 'bg-blue-100 text-blue-700' 
+                              ? 'bg-gray-900/50 border-gray-700/50 hover:border-gray-600/50' 
                               : announcement.type === 'security'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-green-100 text-green-700'
+                              ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                              : 'bg-green-500/20 text-green-300 border border-green-500/30'
                           }`}>
                             {announcement.type}
                           </span>
-                          <span className="text-xs text-gray-700">{announcement.date}</span>
+                          <span className="text-sm text-gray-400 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            {announcement.date}
+                          </span>
                           {!announcement.read && (
-                            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
+                            <span className="text-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1.5 rounded-full">
                               NEW
                             </span>
                           )}
@@ -524,32 +708,34 @@ export default function ResidentDashboard() {
                     {!announcement.read && (
                       <button
                         onClick={() => markAsRead(announcement.id)}
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-sm text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-2"
                       >
+                        <CheckCircle className="w-4 h-4" />
                         Mark read
                       </button>
                     )}
                   </div>
-                  <p className="text-gray-800 mb-3">{announcement.content}</p>
+                  <p className="text-gray-300 mb-3">{announcement.content}</p>
                 </div>
               ))}
             </div>
             
-            <div className="mt-8 p-6 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl">
-              <div className="flex items-start space-x-3">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-red-600 text-xl">🚨</span>
+            <div className="mt-8 p-8  rounded-2xl">
+              <div className="flex items-start gap-6">
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <ShieldAlert className="w-8 h-8 text-red-400" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-red-900 mb-2">Emergency Notifications</h4>
-                  <p className="text-red-800">
+                  <h4 className="font-bold text-white text-xl mb-3">Emergency Notifications</h4>
+                  <p className="text-gray-300 mb-6">
                     In case of emergency, use the Panic Button on the Overview tab. 
                     Security and admin will be notified immediately.
                   </p>
                   <button
                     onClick={() => setActiveTab('overview')}
-                    className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium"
+                    className="px-6 py-3 border border-red-500/50 text-red-500 rounded-xl font-medium transition-all duration-300 flex items-center gap-3"
                   >
+                    <ShieldAlert className="w-5 h-5" />
                     Go to Panic Button
                   </button>
                 </div>
@@ -560,29 +746,39 @@ export default function ResidentDashboard() {
 
         {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Profile Information</h3>
+          <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8 text-white">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14  rounded-xl flex items-center justify-center">
+                  <User className="w-7 h-7 " />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Profile Information</h3>
+                  <p className="text-gray-400">Manage your personal details</p>
+                </div>
+              </div>
               {!isEditing ? (
                 <button
                   onClick={handleEditProfile}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium flex items-center"
+                  className="px-6 py-3 border border-cyan-500/50 text-cyan-500 rounded-xl font-medium transition-all duration-300 flex items-center gap-3"
                 >
-                  <span className="mr-2">✏️</span>
+                  <Edit className="w-5 h-5" />
                   Edit Profile
                 </button>
               ) : (
-                <div className="flex space-x-3">
+                <div className="flex gap-3">
                   <button
                     onClick={handleCancelEdit}
-                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 font-medium"
+                    className="px-6 py-3 bg-gray-700/50 text-gray-300 hover:text-white rounded-xl hover:bg-gray-700 font-medium border border-gray-600 transition-all duration-300 flex items-center gap-3"
                   >
+                    <X className="w-5 h-5" />
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveProfile}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium flex items-center"
+                    className="px-6 py-3 border border-cyan-500/50 text-cyan-500 rounded-xl font-medium transition-all duration-300 flex items-center gap-3"
                   >
+                    <Save className="w-5 h-5" />
                     {saveStatus === 'saving' ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
@@ -590,22 +786,28 @@ export default function ResidentDashboard() {
             </div>
 
             {saveStatus === 'success' && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-700 font-medium"> Profile updated successfully!</p>
+              <div className="mb-8 p-6 bg-gradient-to-r from-emerald-900/20 to-teal-900/20 border border-emerald-500/30 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  <p className="text-emerald-300 font-medium">Profile updated successfully!</p>
+                </div>
               </div>
             )}
 
             {saveStatus === 'error' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-700 font-medium">Error updating profile. Please try again.</p>
+              <div className="mb-8 p-6 bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-500/30 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-red-400" />
+                  <p className="text-red-300 font-medium">Error updating profile. Please try again.</p>
+                </div>
               </div>
             )}
 
             {isEditing ? (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Full Name
                     </label>
                     <input
@@ -613,11 +815,11 @@ export default function ResidentDashboard() {
                       name="name"
                       value={editForm.name || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Email Address
                     </label>
                     <input
@@ -625,11 +827,11 @@ export default function ResidentDashboard() {
                       name="email"
                       value={editForm.email || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Phone Number
                     </label>
                     <input
@@ -637,11 +839,11 @@ export default function ResidentDashboard() {
                       name="phone"
                       value={editForm.phone || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Emergency Contact
                     </label>
                     <input
@@ -649,11 +851,11 @@ export default function ResidentDashboard() {
                       name="emergencyContact"
                       value={editForm.emergencyContact || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Unit Number
                     </label>
                     <input
@@ -661,11 +863,11 @@ export default function ResidentDashboard() {
                       name="unitNumber"
                       value={editForm.unitNumber || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Building
                     </label>
                     <input
@@ -673,11 +875,11 @@ export default function ResidentDashboard() {
                       name="building"
                       value={editForm.building || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Family Members
                     </label>
                     <input
@@ -686,11 +888,11 @@ export default function ResidentDashboard() {
                       value={editForm.familyMembers || ''}
                       onChange={handleInputChange}
                       min="1"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-gray-300 font-medium">
                       Vehicle Number
                     </label>
                     <input
@@ -698,101 +900,83 @@ export default function ResidentDashboard() {
                       name="vehicleNumber"
                       value={editForm.vehicleNumber || ''}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white transition-all"
                     />
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="flex items-center space-x-6 p-6 bg-blue-50 rounded-xl">
-                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    {residentData?.name?.charAt(0) || 'R'}
+              <div className="space-y-8">
+                <div className="flex items-center gap-8 p-8 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50">
+                  <div className="w-24 h-24  rounded-2xl flex items-center justify-center shadow-lg ">
+                    <span className="text-white text-3xl font-bold">
+                      {residentData?.name?.charAt(0) || 'R'}
+                    </span>
                   </div>
                   <div>
-                    <h4 className="text-2xl font-bold text-gray-900">{residentData?.name || 'Resident'}</h4>
-                    <p className="text-gray-700">{residentData?.email || 'resident@demo.com'}</p>
-                    <p className="text-sm text-gray-600 mt-1">Resident since {residentData?.joinDate || '2023-01-15'}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 border border-gray-200 rounded-xl">
-                    <h4 className="font-semibold text-gray-900 mb-4">Contact Information</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Phone Number</p>
-                        <p className="font-medium text-gray-900">{residentData?.phone || '+91 9876543210'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Emergency Contact</p>
-                        <p className="font-medium text-gray-900">{residentData?.emergencyContact || '+91 9876543211'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Email Address</p>
-                        <p className="font-medium text-gray-900">{residentData?.email || 'resident@demo.com'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 border border-gray-200 rounded-xl">
-                    <h4 className="font-semibold text-gray-900 mb-4">Residence Details</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Unit Number</p>
-                        <p className="font-medium text-gray-900">{residentData?.unitNumber || 'A-101'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Building</p>
-                        <p className="font-medium text-gray-900">{residentData?.building || 'Tower A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Family Members</p>
-                        <p className="font-medium text-gray-900">{residentData?.familyMembers || '3'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Vehicle Number</p>
-                        <p className="font-medium text-gray-900">{residentData?.vehicleNumber || 'MH01AB1234'}</p>
-                      </div>
+                    <h4 className="text-3xl font-bold text-white">{residentData?.name || 'Resident'}</h4>
+                    <div className="flex items-center gap-4 mt-3">
+                      <span className="text-gray-400 flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {residentData?.email || 'resident@demo.com'}
+                      </span>
+                      <span className="text-gray-400 flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Resident since {residentData?.joinDate || '2023-01-15'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-4">Quick Actions</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button
-                      onClick={() => setActiveTab('visitors')}
-                      className="p-4 bg-white border border-blue-100 rounded-lg hover:bg-blue-50 transition-colors text-left"
-                    >
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                        <span className="text-blue-600">👥</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="p-8 bg-gray-900/50 border border-gray-700/50 rounded-2xl">
+                    <h4 className="font-semibold text-white text-xl mb-6 flex items-center gap-3">
+                      <Phone className="w-5 h-5 text-cyan-400" />
+                      Contact Information
+                    </h4>
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-sm text-gray-400">Phone Number</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.phone || '+91 9876543210'}</p>
                       </div>
-                      <h5 className="font-medium text-gray-900">Manage Visitors</h5>
-                      <p className="text-sm text-gray-600 mt-1">Create and manage visitor passes</p>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('payments')}
-                      className="p-4 bg-white border border-green-100 rounded-lg hover:bg-green-50 transition-colors text-left"
-                    >
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                        <span className="text-green-600">💰</span>
+                      <div>
+                        <p className="text-sm text-gray-400">Emergency Contact</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.emergencyContact || '+91 9876543211'}</p>
                       </div>
-                      <h5 className="font-medium text-gray-900">Make Payment</h5>
-                      <p className="text-sm text-gray-600 mt-1">Pay maintenance dues online</p>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('overview')}
-                      className="p-4 bg-white border border-red-100 rounded-lg hover:bg-red-50 transition-colors text-left"
-                    >
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mb-3">
-                        <span className="text-red-600">🚨</span>
+                      <div>
+                        <p className="text-sm text-gray-400">Email Address</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.email || 'resident@demo.com'}</p>
                       </div>
-                      <h5 className="font-medium text-gray-900">Panic Button</h5>
-                      <p className="text-sm text-gray-600 mt-1">Emergency assistance</p>
-                    </button>
+                    </div>
+                  </div>
+
+                  <div className="p-8 bg-gray-900/50 border border-gray-700/50 rounded-2xl">
+                    <h4 className="font-semibold text-white text-xl mb-6 flex items-center gap-3">
+                      <Building className="w-5 h-5 text-cyan-400" />
+                      Residence Details
+                    </h4>
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-sm text-gray-400">Unit Number</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.unitNumber || 'A-101'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Building</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.building || 'Tower A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Family Members</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.familyMembers || '3'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Vehicle Number</p>
+                        <p className="font-medium text-white text-lg mt-2">{residentData?.vehicleNumber || 'MH01AB1234'}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+               
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Building2, Shield, User, Users, KeyRound, LogIn, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 // Hardcoded user database simulation
 const USER_DATABASE = {
@@ -155,23 +156,42 @@ export default function LoginPage() {
 
   const demoCredentials = getDemoCredentials()
 
+  const userTypeConfig = {
+    resident: { icon: <Building2 className="w-5 h-5" />, color: 'from-blue-500 to-cyan-500' },
+    admin: { icon: <Shield className="w-5 h-5" />, color: 'from-purple-500 to-pink-500' },
+    security: { icon: <Users className="w-5 h-5" />, color: 'from-amber-500 to-orange-500' },
+    staff: { icon: <User className="w-5 h-5" />, color: 'from-emerald-500 to-teal-500' }
+  }
+
+  const userTypeLabels = {
+    resident: 'Resident',
+    admin: 'Admin',
+    security: 'Security',
+    staff: 'Staff'
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-xl">ES</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+      <div className="max-w-lg w-full">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-8 md:p-10 transition-all duration-500 hover:border-gray-600/50">
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30">
+              <span className="text-white font-bold text-2xl">ES</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">EstateSecure</h1>
-            <p className="text-gray-700 font-medium">Secure Estate Management System</p>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-3">
+              EstateSecure
+            </h1>
+            <p className="text-gray-300 font-medium">Secure Estate Management System</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-8">
             {/* User Type Selection */}
             <div>
-              <label className="block text-sm font-medium mb-3 text-gray-800">Select Your Role</label>
-              <div className="grid grid-cols-4 gap-2">
+              <label className="block text-gray-300 font-medium mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Select Your Role
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 {['resident', 'admin', 'security', 'staff'].map((type) => (
                   <button
                     key={type}
@@ -181,50 +201,55 @@ export default function LoginPage() {
                       const creds = USER_DATABASE.users.find(u => u.type === type)
                       setEmail(creds?.email || '')
                     }}
-                    className={`py-3 rounded-lg capitalize font-medium transition-all ${
+                    className={`py-4 rounded-xl capitalize font-medium transition-all duration-300 transform hover:scale-105 ${
                       userType === type 
-                        ? 'bg-blue-700 text-white shadow-md' 
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300'
+                        ? `border border-cyan-500 text-cyan-500 shadow-lg` 
+                        : 'bg-gray-900/50 text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-700'
                     }`}
                   >
-                    {type}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`${userType === type ? 'text-cyan-500' : 'text-gray-500'}`}>
+                        {userTypeConfig[type].icon}
+                      </div >
+                      <span>{userTypeLabels[type]}</span>
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-sm">
-                <div className="flex items-center">
-                  <span className="mr-2">⚠️</span>
-                  {error}
-                </div>
+              <div className="bg-red-900/30 border border-red-700/50 rounded-xl p-4 text-red-300 flex items-start gap-3 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-800">
+            <div className="space-y-2">
+              <label className="block text-gray-300 font-medium flex items-center gap-2">
+                <User className="w-5 h-5" />
                 Email Address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                className="w-full p-4 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white placeholder-gray-500 transition-all"
                 placeholder={demoCredentials.email}
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-800">
+            <div className="space-y-2">
+              <label className="block text-gray-300 font-medium flex items-center gap-2">
+                <KeyRound className="w-5 h-5" />
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                className="w-full p-4 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 text-white placeholder-gray-500 transition-all"
                 placeholder="123456"
                 required
               />
@@ -233,25 +258,58 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-medium shadow-lg shadow-blue-500/25 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
                   Signing In...
                 </div>
               ) : (
-                `Sign In as ${userType.charAt(0).toUpperCase() + userType.slice(1)}`
+                <div className="flex items-center justify-center gap-3">
+                  <LogIn className="w-5 h-5" />
+                  Sign In as {userType.charAt(0).toUpperCase() + userType.slice(1)}
+                </div>
               )}
             </button>
 
-            <div className="text-center">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-800 mb-1">Demo Credentials for {userType}:</p>
-                <div className="font-mono text-sm bg-white p-2 rounded border">
-                  <div className="text-gray-900">Email: {demoCredentials.email}</div>
-                  <div className="text-gray-900">Password: {demoCredentials.password}</div>
-                  <div className="text-gray-900 mt-1 text-xs">Name: {demoCredentials.name}</div>
+            {/* Demo Credentials Section */}
+            <div className="mt-8">
+              <div className="bg-gray-900/30 border border-gray-700/50 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle2 className="w-5 h-5 text-cyan-400" />
+                  <p className="text-gray-300 font-medium">
+                    Demo Credentials for <span className="text-cyan-300">{userTypeLabels[userType]}</span>
+                  </p>
+                </div>
+                <div className="space-y-3 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Email</div>
+                      <div className="text-white font-mono text-sm">{demoCredentials.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+                      <KeyRound className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Password</div>
+                      <div className="text-white font-mono text-sm">{demoCredentials.password}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Name</div>
+                      <div className="text-white font-mono text-sm">{demoCredentials.name}</div>
+                    </div>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -259,64 +317,22 @@ export default function LoginPage() {
                     setEmail(demoCredentials.email)
                     setPassword('123456')
                   }}
-                  className="mt-3 text-sm text-blue-700 hover:text-blue-900 font-medium"
+                  className="mt-4 w-full py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-gray-300 rounded-lg hover:text-white hover:from-gray-700 hover:to-gray-800 font-medium border border-gray-700 transition-all duration-300"
                 >
-                  Click to auto-fill credentials
+                  Auto-fill Demo Credentials
                 </button>
               </div>
             </div>
-          </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="font-semibold mb-3 text-gray-900">Core Features:</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <div className="flex items-center">
-                  <span className="text-blue-600 mr-2">🔐</span>
-                  <span className="text-sm font-medium text-gray-800">Visitor Pass System</span>
-                </div>
-              </div>
-              <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-                <div className="flex items-center">
-                  <span className="text-red-600 mr-2">🚨</span>
-                  <span className="text-sm font-medium text-gray-800">Panic Button</span>
-                </div>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg border border-green-100">
-                <div className="flex items-center">
-                  <span className="text-green-600 mr-2">💰</span>
-                  <span className="text-sm font-medium text-gray-800">Digital Payments</span>
-                </div>
-              </div>
-              <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
-                <div className="flex items-center">
-                  <span className="text-purple-600 mr-2">📊</span>
-                  <span className="text-sm font-medium text-gray-800">Admin Dashboard</span>
-                </div>
-              </div>
-              <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                <div className="flex items-center">
-                  <span className="text-yellow-600 mr-2">👮</span>
-                  <span className="text-sm font-medium text-gray-800">Security Interface</span>
-                </div>
-              </div>
-              <div className="bg-cyan-50 p-3 rounded-lg border border-cyan-100">
-                <div className="flex items-center">
-                  <span className="text-cyan-600 mr-2">🔔</span>
-                  <span className="text-sm font-medium text-gray-800">Real-time Alerts</span>
-                </div>
-              </div>
+            <div className="pt-6 border-t border-gray-700/50 text-center">
+              <p className="text-gray-500 text-sm">
+                Need help? Contact support at{' '}
+                <a href="mailto:support@estatesecure.com" className="text-cyan-400 hover:text-cyan-300 hover:underline">
+                  support@estatesecure.com
+                </a>
+              </p>
             </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              This is a demo application. All data is stored in-memory and resets on page refresh.
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              Active users in database: {USER_DATABASE.users.length}
-            </p>
-          </div>
+          </form>
         </div>
       </div>
     </div>

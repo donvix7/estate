@@ -376,113 +376,14 @@ export default function AdminPeopleManagement() {
             </div>
           </div>
         </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Total People</p>
-                <p className="text-3xl font-bold text-blue-700">{profiles.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 text-xl">👥</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 border border-green-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Active Residents</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {profiles.filter(p => p.type === 'resident' && p.status === 'active').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-green-600 text-xl">🏠</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 border border-purple-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Active Staff</p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {profiles.filter(p => p.type === 'staff' && p.status === 'active').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-purple-600 text-xl">👨‍🔧</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 border border-orange-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Active Security</p>
-                <p className="text-3xl font-bold text-orange-600">
-                  {profiles.filter(p => p.type === 'security' && p.status === 'active').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <span className="text-orange-600 text-xl">👮</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      </header>        
+         
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - List & Filters */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              {/* Header with Actions */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">People Directory</h2>
-                  <p className="text-gray-600">Manage all residents, staff, and security personnel</p>
-                </div>
-                
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center"
-                  >
-                    <span className="mr-2">+</span> Add New
-                  </button>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Export Data
-                  </button>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex border-b mb-6 overflow-x-auto">
-                {[
-                  { id: 'all', label: 'All People', icon: '👥' },
-                  { id: 'resident', label: 'Residents', icon: '🏠' },
-                  { id: 'staff', label: 'Staff', icon: '👨‍🔧' },
-                  { id: 'security', label: 'Security', icon: '👮' }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center px-6 py-3 whitespace-nowrap font-medium ${
-                      activeTab === tab.id 
-                        ? 'border-b-2 border-blue-700 text-blue-700' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <span className="mr-2">{tab.icon}</span>
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
 
               {/* Search & Filters */}
               <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -516,6 +417,8 @@ export default function AdminPeopleManagement() {
                   </span>
                 </div>
               </div>
+                            
+          
 
               {/* Profiles List */}
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
@@ -891,229 +794,253 @@ export default function AdminPeopleManagement() {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Add New Profile Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
-              {/* Modal Header */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Add New Person</h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              {/* Add Form */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-800">Person Type</label>
-                  <select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Add New Person
+                  </h3>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <option value="resident">Resident</option>
-                    <option value="staff">Staff</option>
-                    <option value="security">Security</option>
-                  </select>
+                    ✕
+                  </button>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-800">Full Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                    required
-                    placeholder="Enter full name"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-800">Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                    required
-                    placeholder="Enter email address"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-800">Phone *</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                    required
-                    placeholder="Enter phone number"
-                  />
-                </div>
-                
-                {formData.type === 'resident' && (
-                  <>
+                <div className="space-y-4">
+                  {/* Common Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Unit Number</label>
-                      <input
-                        type="text"
-                        name="unitNumber"
-                        value={formData.unitNumber}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        placeholder="e.g., A-101"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Occupation</label>
-                      <input
-                        type="text"
-                        name="occupation"
-                        value={formData.occupation}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        placeholder="e.g., Software Engineer"
-                      />
-                    </div>
-                  </>
-                )}
-                
-                {formData.type === 'staff' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Role</label>
-                      <input
-                        type="text"
-                        name="role"
-                        value={formData.role}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        placeholder="e.g., Maintenance Supervisor"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Department</label>
-                      <input
-                        type="text"
-                        name="department"
-                        value={formData.department}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        placeholder="e.g., Maintenance"
-                      />
-                    </div>
-                  </>
-                )}
-                
-                {formData.type === 'security' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Badge Number</label>
-                      <input
-                        type="text"
-                        name="badgeNumber"
-                        value={formData.badgeNumber}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                        placeholder="e.g., SG-2024-001"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-800">Shift</label>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Person Type</label>
                       <select
-                        name="shift"
-                        value={formData.shift}
+                        name="type"
+                        value={formData.type}
                         onChange={handleInputChange}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
                       >
-                        <option value="">Select Shift</option>
-                        <option value="Morning (6 AM - 2 PM)">Morning (6 AM - 2 PM)</option>
-                        <option value="Evening (2 PM - 10 PM)">Evening (2 PM - 10 PM)</option>
-                        <option value="Night (10 PM - 6 AM)">Night (10 PM - 6 AM)</option>
+                        <option value="resident">Resident</option>
+                        <option value="staff">Staff</option>
+                        <option value="security">Security</option>
                       </select>
                     </div>
-                  </>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-800">Initial Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
-                  </select>
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex space-x-3 mt-8">
-                <button
-                  onClick={handleAddProfile}
-                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                >
-                  Add Person
-                </button>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Bottom Status Bar */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="p-4 bg-gray-900 text-white rounded-lg">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <p className="text-sm text-gray-300">Admin Controls:</p>
-              <div className="flex items-center space-x-4 mt-1">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Edit Permissions: Enabled</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Data Export: Enabled</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Profile Management: Active</span>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Full Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Email Address</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-800">Phone Number</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                        placeholder="+1 234 567 890"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Type Specific Fields */}
+                  
+                  {/* Resident Specific */}
+                  {formData.type === 'resident' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
+                      <div className="col-span-full mb-2">
+                        <h4 className="text-sm font-semibold text-blue-800">Resident Details</h4>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Unit Number</label>
+                        <input
+                          type="text"
+                          name="unitNumber"
+                          value={formData.unitNumber}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                          placeholder="e.g. A-101"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Occupation</label>
+                        <input
+                          type="text"
+                          name="occupation"
+                          value={formData.occupation}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                          placeholder="e.g. Engineer"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Emergency Contact</label>
+                        <input
+                          type="tel"
+                          name="emergencyContact"
+                          value={formData.emergencyContact}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                          placeholder="Emergency phone"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Staff Specific */}
+                  {formData.type === 'staff' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
+                      <div className="col-span-full mb-2">
+                        <h4 className="text-sm font-semibold text-orange-800">Staff Details</h4>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Role</label>
+                        <input
+                          type="text"
+                          name="role"
+                          value={formData.role}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                          placeholder="e.g. Cleaner"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Department</label>
+                        <input
+                          type="text"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                          placeholder="e.g. Maintenance"
+                        />
+                      </div>
+
+                      <div>
+                         <label className="block text-sm font-medium mb-2 text-gray-800">Salary</label>
+                         <input
+                           type="text"
+                           name="salary"
+                           value={formData.salary}
+                           onChange={handleInputChange}
+                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                           placeholder="e.g. $50,000"
+                         />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Security Specific */}
+                  {formData.type === 'security' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-green-50 p-4 rounded-lg">
+                      <div className="col-span-full mb-2">
+                        <h4 className="text-sm font-semibold text-green-800">Security Details</h4>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Badge Number</label>
+                        <input
+                          type="text"
+                          name="badgeNumber"
+                          value={formData.badgeNumber}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                          placeholder="e.g. SEC-001"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Shift</label>
+                        <select
+                          name="shift"
+                          value={formData.shift}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                        >
+                          <option value="">Select Shift</option>
+                          <option value="Morning (6 AM - 2 PM)">Morning (6 AM - 2 PM)</option>
+                          <option value="Evening (2 PM - 10 PM)">Evening (2 PM - 10 PM)</option>
+                          <option value="Night (10 PM - 6 AM)">Night (10 PM - 6 AM)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-800">Experience</label>
+                         <input
+                           type="text"
+                           name="experience"
+                           value={formData.experience}
+                           onChange={handleInputChange}
+                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                           placeholder="e.g. 5 years"
+                         />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-800">Status</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                       <option value="pending">Pending</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100 mt-2">
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAddProfile}
+                      disabled={!formData.name}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Add Person
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-300">Last Update: {new Date().toLocaleTimeString()}</p>
-              <p className="text-sm text-gray-300">All administrative functions operational</p>
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        )}
+      </div>  
+
+
+
+
   )
 }

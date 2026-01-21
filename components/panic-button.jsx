@@ -25,7 +25,7 @@ export function PanicButton() {
   const handlePinSubmit = () => {
     if (pin === '0000') { // Default emergency PIN
       // Send panic alert
-      alert('🚨 PANIC ALERT SENT! Security and Admin notified!')
+      alert(' PANIC ALERT SENT! Security and Admin notified!')
       setIsPanicking(false)
       setShowPin(false)
       setPin('')
@@ -91,7 +91,7 @@ export function PanicButton() {
           {isPanicking ? countdown : 'PANIC'}
         </button>
       )}
-      <p className="mt-4 text-sm text-gray-600 text-center">
+      <p className="mt-4 text-sm text-gray-300 text-center">
         Press in case of emergency. Alerts security and admin immediately.
       </p>
     </div>
