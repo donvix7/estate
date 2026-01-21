@@ -1,4 +1,4 @@
-import { Building, LogOut, Briefcase, User, IDCard } from 'lucide-react'
+import { Briefcase, Building, LogOut } from 'lucide-react'
 import React from 'react'
 
 const StaffNav = ({ staffData, onLogout }) => {
